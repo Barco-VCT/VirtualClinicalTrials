@@ -1,0 +1,10 @@
+SET(SRC_SaveFrameRAWModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SaveFrameRAWModule/cpp/SaveFrameRAWModule.cpp 
+) 
+SET(HEADER_SaveFrameRAWModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SaveFrameRAWModule/SaveFrameRAWModule.h 
+) 
+SET(FILES_MODULES_SaveFrameRAWModule 
+${SRC_SaveFrameRAWModule} 
+${HEADER_SaveFrameRAWModule} 
+) 

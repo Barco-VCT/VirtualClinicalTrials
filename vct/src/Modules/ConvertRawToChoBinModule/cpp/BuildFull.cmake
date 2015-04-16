@@ -1,0 +1,10 @@
+SET(SRC_ConvertRawToChoBinModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/ConvertRawToChoBinModule/cpp/ConvertRawToChoBinModule.cpp 
+) 
+SET(HEADER_ConvertRawToChoBinModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/ConvertRawToChoBinModule/ConvertRawToChoBinModule.h 
+) 
+SET(FILES_MODULES_ConvertRawToChoBinModule 
+${SRC_ConvertRawToChoBinModule} 
+${HEADER_ConvertRawToChoBinModule} 
+) 

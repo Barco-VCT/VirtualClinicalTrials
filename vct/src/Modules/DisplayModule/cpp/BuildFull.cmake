@@ -1,0 +1,10 @@
+SET(SRC_DisplayModule
+	 ${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/DisplayModule/cpp/DisplayModule.cpp
+	 )
+SET(HEADER_DisplayModule
+	 ${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/DisplayModule/DisplayModule.h
+	 )
+SET(FILES_MODULES_DisplayModule
+	 ${SRC_DisplayModule}
+	 ${HEADER_DisplayModule}
+	 )

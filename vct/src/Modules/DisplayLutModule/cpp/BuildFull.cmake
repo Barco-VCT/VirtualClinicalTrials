@@ -1,0 +1,10 @@
+SET(SRC_DisplayLutModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/DisplayLutModule/cpp/DisplayLutModule.cpp 
+) 
+SET(HEADER_DisplayLutModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/DisplayLutModule/DisplayLutModule.h 
+) 
+SET(FILES_MODULES_DisplayLutModule 
+${SRC_DisplayLutModule} 
+${HEADER_DisplayLutModule} 
+) 

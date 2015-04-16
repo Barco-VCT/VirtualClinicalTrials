@@ -1,0 +1,10 @@
+SET(SRC_SequenceRawGeneratorModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SequenceRawGeneratorModule/cpp/SequenceRawGeneratorModule.cpp 
+) 
+SET(HEADER_SequenceRawGeneratorModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SequenceRawGeneratorModule/SequenceRawGeneratorModule.h 
+) 
+SET(FILES_MODULES_SequenceRawGeneratorModule 
+${SRC_SequenceRawGeneratorModule} 
+${HEADER_SequenceRawGeneratorModule} 
+) 

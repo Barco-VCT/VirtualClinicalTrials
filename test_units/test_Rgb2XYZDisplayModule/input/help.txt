@@ -1,0 +1,6 @@
+width=height=64
+RGB 24bits
+littleEndian
+
+pink: 255-93-178
+White slices (flat field)

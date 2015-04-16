@@ -1,0 +1,10 @@
+SET(SRC_Rgb2XYZDisplayModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/Rgb2XYZDisplayModule/cpp/Rgb2XYZDisplayModule.cpp 
+) 
+SET(HEADER_Rgb2XYZDisplayModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/Rgb2XYZDisplayModule/Rgb2XYZDisplayModule.h 
+) 
+SET(FILES_MODULES_Rgb2XYZDisplayModule 
+${SRC_Rgb2XYZDisplayModule} 
+${HEADER_Rgb2XYZDisplayModule} 
+) 

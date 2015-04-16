@@ -1,0 +1,1291 @@
+//M*//////////////////////////////////////////////////////////////////////////////////////
+//
+//  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
+//
+//  By downloading, copying, installing or using the software you agree to this license.
+//  If you do not agree to this license, do not download, install,
+//  copy or use the software.
+//
+//
+//                        Intel License Agreement
+//                For Open Source Computer Vision Library
+//
+// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Third party copyrights are property of their respective owners.
+//
+// Redistribution and use in source and binary forms, with or without modification,
+// are permitted provided that the following conditions are met:
+//
+//   * Redistribution's of source code must retain the above copyright notice,
+//     this list of conditions and the following disclaimer.
+//
+//   * Redistribution's in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//
+//   * The name of Intel Corporation may not be used to endorse or promote products
+//     derived from this software without specific prior written permission.
+//
+// This software is provided by the copyright holders and contributors "as is" and
+// any express or implied warranties, including, but not limited to, the implied
+// warranties of merchantability and fitness for a particular purpose are disclaimed.
+// In no event shall the Intel Corporation or contributors be liable for any direct,
+// indirect, incidental, special, exemplary, or consequential damages
+// (including, but not limited to, procurement of substitute goods or services;
+// loss of use, data, or profits; or business interruption) however caused
+// and on any theory of liability, whether in contract, strict liability,
+// or tort (including negligence or otherwise) arising in any way out of
+// the use of this software, even if advised of the possibility of such damage.
+//
+//M*/
+
+/****************************************************************************************\
+*    Very fast SAD-based (Sum-of-Absolute-Diffrences) stereo correspondence algorithm.   *
+*    Contributed by Kurt Konolige                                                        *
+\****************************************************************************************/
+
+#include "_cv.h"
+#undef CV_SSE2
+#define CV_SSE2 1
+#include "emmintrin.h"
+
+CV_IMPL CvStereoBMState*
+cvCreateStereoBMState( int /*preset*/, int numberOfDisparities )
+{
+    CvStereoBMState* state = 0;
+
+    CV_FUNCNAME( "cvCreateStereoBMState" );
+
+    __BEGIN__;
+
+    state = (CvStereoBMState*)cvAlloc( sizeof(*state) );
+    if( !state )
+        EXIT;
+    
+    state->preFilterType = CV_STEREO_BM_NORMALIZED_RESPONSE;
+    state->preFilterSize = 9;
+    state->preFilterCap = 31;
+    state->SADWindowSize = 15;
+    state->minDisparity = 0;
+    state->numberOfDisparities = numberOfDisparities > 0 ? numberOfDisparities : 64;
+    state->textureThreshold = 10;
+    state->uniquenessRatio = 15;
+    state->speckleRange = state->speckleWindowSize = 0;
+
+    state->preFilteredImg0 = state->preFilteredImg1 = state->slidingSumBuf = 0;
+
+    __END__;
+
+    if( cvGetErrStatus() < 0 )
+        cvReleaseStereoBMState( &state );
+    return state;
+}
+
+
+CV_IMPL void
+cvReleaseStereoBMState( CvStereoBMState** state )
+{
+    CV_FUNCNAME( "cvReleaseStereoBMState" );
+
+    __BEGIN__;
+
+    if( !state )
+        CV_ERROR( CV_StsNullPtr, "" );
+
+    if( !*state )
+        EXIT;
+
+    cvReleaseMat( &(*state)->preFilteredImg0 );
+    cvReleaseMat( &(*state)->preFilteredImg1 );
+    cvReleaseMat( &(*state)->slidingSumBuf );
+    cvFree( state );
+
+    __END__;
+}
+
+static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero, CvMat* buf )
+{
+    int x, y, wsz2 = winsize/2;
+    int* vsum = (int*)cvAlignPtr(buf->data.ptr + (wsz2 + 1)*sizeof(vsum[0]), 32);
+    int scale_g = winsize*winsize/8, scale_s = (1024 + scale_g)/(scale_g*2);
+    const int OFS = 256*5, TABSZ = OFS*2 + 256;
+    uchar tab[TABSZ];
+    const uchar* sptr = src->data.ptr;
+    int srcstep = src->step;
+    CvSize size = cvGetMatSize(src);
+
+    scale_g *= scale_s;
+
+    for( x = 0; x < TABSZ; x++ )
+        tab[x] = (uchar)(x - OFS < -ftzero ? 0 : x - OFS > ftzero ? ftzero*2 : x - OFS + ftzero);
+
+    for( x = 0; x < size.width; x++ )
+        vsum[x] = (ushort)(sptr[x]*(wsz2 + 2));
+
+    for( y = 1; y < wsz2; y++ )
+    {
+        for( x = 0; x < size.width; x++ )
+            vsum[x] = (ushort)(vsum[x] + sptr[srcstep*y + x]);
+    }
+
+    for( y = 0; y < size.height; y++ )
+    {
+        const uchar* top = sptr + srcstep*MAX(y-wsz2-1,0);
+        const uchar* bottom = sptr + srcstep*MIN(y+wsz2,size.height-1);
+        const uchar* prev = sptr + srcstep*MAX(y-1,0);
+        const uchar* curr = sptr + srcstep*y;
+        const uchar* next = sptr + srcstep*MIN(y+1,size.height-1);
+        uchar* dptr = dst->data.ptr + dst->step*y;
+        x = 0;
+
+        for( ; x < size.width; x++ )
+            vsum[x] = (ushort)(vsum[x] + bottom[x] - top[x]);
+
+        for( x = 0; x <= wsz2; x++ )
+        {
+            vsum[-x-1] = vsum[0];
+            vsum[size.width+x] = vsum[size.width-1];
+        }
+
+        int sum = vsum[0]*(wsz2 + 1);
+        for( x = 1; x <= wsz2; x++ )
+            sum += vsum[x];
+
+        int val = ((curr[0]*5 + curr[1] + prev[0] + next[0])*scale_g - sum*scale_s) >> 10;
+        dptr[0] = tab[val + OFS];
+
+        for( x = 1; x < size.width-1; x++ )
+        {
+            sum += vsum[x+wsz2] - vsum[x-wsz2-1];
+            val = ((curr[x]*4 + curr[x-1] + curr[x+1] + prev[x] + next[x])*scale_g - sum*scale_s) >> 10;
+            dptr[x] = tab[val + OFS];
+        }
+        
+        sum += vsum[x+wsz2] - vsum[x-wsz2-1];
+        val = ((curr[x]*5 + curr[x-1] + prev[x] + next[x])*scale_g - sum*scale_s) >> 10;
+        dptr[x] = tab[val + OFS];
+    }
+}
+
+#if CV_SSE2
+static inline void
+memclr_si128(void *_buf, int n)
+{
+    __m128i* buf = (__m128i*)_buf;
+    __m128i zz = _mm_setzero_si128();
+    n >>= 4;
+    for( int i = 0; i < n; i++, buf++ )
+        _mm_store_si128(buf,zz);
+}
+
+void
+do_stereo_d_fast(uchar *lim, uchar *rim, // input feature images
+	    short *disp,	// disparity output
+	    short *text,	// texture output
+	    int xim, int yim,	// size of images
+	    uchar ftzero,	// feature offset from zero
+	    int xwin, int ywin,	// size of corr window, usually square
+	    int dlen,		// size of disparity search, multiple of 8
+        int XKERN, int YKERN,
+	    int tfilter_thresh,	// texture filter threshold
+	    int ufilter_thresh,	// uniqueness filter threshold, percent
+	    uchar *buf	// buffer storage
+	    )
+{
+  int i,j,k,d;			// iteration indices
+  short *accp, *accpp;	// acc buffer ptrs
+  schar *limp, *rimp, *limpp, *rimpp, *limp2, *limpp2;	// feature image ptrs
+  schar *corrend, *corrp, *corrpp; // corr buffer ptrs
+  short *intp, *intpp;	// integration buffer pointers
+  short *textpp;		// texture buffer pointer
+  short *dispp, *disppp;	// disparity output pointer
+  short *textp;		// texture output pointer
+  short acc;
+  int dval;			// disparity value
+  int uniqthresh;		// fractional 16-bit threshold
+  
+  // xmm variables
+  __m128i limpix, rimpix, newpix, tempix, oldpix;
+  __m128i newval, temval;
+  __m128i minv, indv, indtop, indd, indm, temv, nexv;
+  __m128i cval, pval, nval, ival; // correlation values for subpixel disparity interpolation
+  __m128i denv, numv, intv, sgnv; // numerator, denominator, interpolation, sign of subpixel interp
+  __m128i uniqcnt, uniqth, uniqinit, unim, uval; // uniqueness count, uniqueness threshold
+
+  // xmm constants, remember the 64-bit values are backwards
+#ifdef WIN32
+  const __m128i p0xfffffff0 = {0x0, 0x0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+  const __m128i p0x0000000f = {0xff, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+			       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+  const __m128i zeros = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+			 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+  const __m128i val_epi16_7fff = {0xff, 0x7f, 0xff, 0x7f, 0xff, 0x7f, 0xff, 0x7f, 
+				  0xff, 0x7f, 0xff, 0x7f, 0xff, 0x7f, 0xff, 0x7f};
+  const __m128i val_epi16_8    = {0x08, 0x0, 0x08, 0x0, 0x08, 0x0, 0x08, 0x0, 
+				  0x08, 0x0, 0x08, 0x0, 0x08, 0x0, 0x08, 0x0};
+  const __m128i val_epi16_1    = {0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00,
+				  0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+#else
+  const __m128i p0xfffffff0 = {0xffffffffffff0000LL, 0xffffffffffffffffLL};
+  const __m128i p0x0000000f = {0xffffLL, 0x0LL};
+  const __m128i zeros = {0x0LL, 0x0LL};
+  const __m128i val_epi16_7fff = {0x7fff7fff7fff7fffLL, 0x7fff7fff7fff7fffLL};
+  const __m128i val_epi16_8    = {0x0008000800080008LL, 0x0008000800080008LL};
+  const __m128i val_epi16_1    = {0x0001000100010001LL, 0x0001000100010001LL};
+#endif
+
+  // set up buffers, first align to 16 bytes
+  uintptr_t bufp = (uintptr_t)buf;
+  short *intbuf, *textbuf, *accbuf;
+  schar *corrbuf;
+
+  if (bufp & 0xF)
+    bufp = (bufp+15) & ~(uintptr_t)0xF;
+  buf = (uchar *)bufp;
+
+#define INTEBUFSIZE ((yim+16+ywin)*dlen)
+  intbuf  = (short *)buf;	// integration buffer
+  bufp = (uintptr_t)intbuf;
+  if (bufp & 0xF)
+    bufp = (bufp+15) & ~(uintptr_t)0xF;
+  intbuf = (short *)bufp;  
+
+#define TXTBUFSIZE (yim + 64)
+  textbuf = (short *)&buf[INTEBUFSIZE*sizeof(short)];	// texture buffer
+  bufp = (uintptr_t)textbuf;
+  if (bufp & 0xF)
+    bufp = (bufp+15) & ~(uintptr_t)0xF;
+  textbuf = (short *)bufp;  
+
+
+#define ACCBUFSIZE (yim*dlen + 64)
+  accbuf  = (short *)&buf[(INTEBUFSIZE+TXTBUFSIZE)*sizeof(short)]; // accumulator buffer
+  bufp = (uintptr_t)accbuf;
+  if (bufp & 0xF)
+    bufp = (bufp+15) & ~(uintptr_t)0xF;
+  accbuf = (short *)bufp;  
+
+
+  corrbuf = (schar *)&buf[(INTEBUFSIZE+TXTBUFSIZE+ACCBUFSIZE)*sizeof(short)]; // correlation buffer
+  bufp = (uintptr_t)corrbuf;
+  if (bufp & 0xF)
+    bufp = (bufp+15) & ~(uintptr_t)0xF;
+  corrbuf = (schar *)bufp;  
+
+  // clear out buffers
+  memclr_si128((__m128i *)intbuf, dlen*yim*sizeof(short));
+  memclr_si128((__m128i *)corrbuf, dlen*yim*xwin*sizeof(schar));
+  memclr_si128((__m128i *)accbuf, dlen*yim*sizeof(short));
+  memclr_si128((__m128i *)textbuf, yim*sizeof(short));
+
+  // set up corrbuf pointers
+  corrend = corrbuf + dlen*yim*xwin;
+  corrp = corrbuf;
+
+  // start further out on line to take care of disparity offsets
+  limp = (schar *)lim + dlen - 1;
+  limp2 = limp;
+  rimp = (schar *)rim;
+  dispp = disp + xim*(ywin+YKERN-2)/2 + dlen + (xwin+XKERN-2)/2; 
+  textp = NULL;
+  if (text != NULL)		// optional texture buffer output
+    textp = text + dlen;
+
+  // set up some constants
+  //  indtop = _mm_set_epi16(dlen+7, dlen+6, dlen+5, dlen+4, dlen+3, dlen+2, dlen+1, dlen);
+  indtop = _mm_set_epi16(dlen+0, dlen+1, dlen+2, dlen+3, dlen+4, dlen+5, dlen+6, dlen+7);
+  uniqthresh = (0x8000 * ufilter_thresh)/100; // fractional multiplication factor
+                                              // for uniqueness test
+  uniqinit = _mm_set1_epi16(uniqthresh);
+  // init variables so compiler doesn't complain
+  intv = zeros;
+  ival = zeros;
+  nval = zeros;
+  pval = zeros;
+  cval = zeros;
+  uval = zeros;
+
+  // iterate over columns first
+  // acc buffer is column-oriented, not line-oriented
+  // at each iteration, move across one column
+  for (i=0; i<xim-XKERN-dlen+2; i++, limp++, rimp++, corrp+=yim*dlen)
+    {    
+      accp = accbuf;
+      if (corrp >= corrend) corrp = corrbuf;
+      limpp = limp;
+      rimpp = rimp;
+      corrpp = corrp;
+      intp = intbuf+(ywin-1)*dlen; // intbuf current ptr
+      intpp = intbuf;	// intbuf old ptr
+          
+      // iterate over rows
+      for (j=0; j<yim-YKERN+1; j++, limpp+=xim, rimpp+=xim-dlen)
+	{
+	  // replicate left image pixel
+	  // could replace this with unpacklo_epi8, shufflelo_epi16, pshuffle_epi32
+	  limpix = _mm_set1_epi8(*limpp);
+
+	  // iterate over disparities
+	  // have to use an intbuf column for each disparity
+	  for (d=0; d<dlen; d+=16, intp+=16, intpp+=16, accp+=16, corrpp+=16, rimpp+=16)    
+	    {
+	      // do SAD calculation
+	      //	      newc = abs(*limpp - rimpp[d]); // new corr val
+	      rimpix = _mm_loadu_si128((__m128i *)rimpp);
+	      newpix = _mm_subs_epu8(limpix,rimpix); // subtract pixel values, saturate
+	      tempix = _mm_subs_epu8(rimpix,limpix); // subtract pixel values the other way, saturate
+	      newpix = _mm_add_epi8(newpix,tempix); // holds abs value
+//	      newpix = _mm_sub_epi8(limpix,rimpix); // subtract pixel values, alternate for SSSE3
+//	      newpix = _mm_abs_epi8(newpix); // absolute value
+
+	      // calculate new acc values, 8 at a time
+	      //	      newv = newc - *corrpp + *intp; // new acc val
+	      oldpix = _mm_load_si128((__m128i *)corrpp);	      
+	      newval = _mm_unpacklo_epi8(newpix,zeros); // unpack into words
+	      temval = _mm_load_si128((__m128i *)intp);	// get acc values
+	      newval = _mm_add_epi16(newval,temval);
+	      temval = _mm_unpacklo_epi8(oldpix,zeros); // unpack into words
+	      newval = _mm_sub_epi16(newval,temval); // subtract out old corr vals
+
+	      // save new corr value
+	      //	      *corrpp++ = newc;	// save new corr val
+	      _mm_store_si128((__m128i *)corrpp,newpix);
+
+	      // save new acc values
+	      //	      *(intp+dlen) = newv; // save new acc val
+	      _mm_store_si128((__m128i *)(intp+dlen),newval);	      
+
+	      // update windowed sum
+	      //	      *accp++ += newv - *intpp++; // update window sum
+	      temval = _mm_load_si128((__m128i *)intpp); // get old acc values
+	      newval = _mm_sub_epi16(newval,temval);
+	      temval = _mm_load_si128((__m128i *)accp); // get window sum values
+	      newval = _mm_add_epi16(newval,temval);
+	      _mm_store_si128((__m128i *)accp,newval);
+
+	      // next set of 8 values
+	      // calculate new acc values, 8 at a time
+	      //	      newv = newc - *corrpp + *intp; // new acc val
+	      newval = _mm_unpackhi_epi8(newpix,zeros); // unpack into words
+	      temval = _mm_load_si128((__m128i *)(intp+8));	// get acc values
+	      newval = _mm_add_epi16(newval,temval);
+	      temval = _mm_unpackhi_epi8(oldpix,zeros); // unpack into words
+	      newval = _mm_sub_epi16(newval,temval); // subtract out old corr vals
+
+	      // save new acc values
+	      //	      *(intp+dlen) = newv; // save new acc val
+	      _mm_store_si128((__m128i *)(intp+dlen+8),newval);	      
+
+	      // update windowed sum
+	      //	      *accp++ += newv - *intpp++; // update window sum
+	      temval = _mm_load_si128((__m128i *)(intpp+8)); // get old acc values
+	      newval = _mm_sub_epi16(newval,temval);
+	      temval = _mm_load_si128((__m128i *)(accp+8)); // get window sum values
+	      newval = _mm_add_epi16(newval,temval);
+	      _mm_store_si128((__m128i *)(accp+8),newval);
+	    }
+	} 
+
+      // average texture computation
+      // use full corr window
+      memclr_si128((__m128i *)intbuf, yim*sizeof(short));
+      limpp = limp;
+      limpp2 = limp2;
+      intp = intbuf+ywin-1;
+      intpp = intbuf;
+      accpp = textbuf;
+      acc = 0;
+	  
+#if 0
+      // iterate over rows
+      // have to skip down a row each time...
+      // check for initial period
+      if (i < xwin)
+	{
+	  for (j=0; j<yim-YKERN+1; j++, limpp+=xim)
+	    {
+	      temp = abs(*limpp- ftzero); 
+	      *intp = temp;
+	      acc += *intp++ - *intpp++;
+	      *accpp++ += acc;
+	    }
+	}
+      else
+	{
+	  for (j=0; j<yim-YKERN+1; j++, limpp+=xim, limpp2+=xim)
+	    {
+	      temp = abs(*limpp-ftzero); 
+	      *intp = temp - abs(*limpp2-ftzero);
+	      acc += *intp++ - *intpp++;
+	      *accpp++ += acc;
+	    }
+          limp2++;
+	}
+#endif
+
+          
+      // disparity extraction, find min of correlations
+      if (i >= xwin)		// far enough along...
+	{
+	  disppp = dispp;
+	  accp   = accbuf + (ywin-1)*dlen; // results within initial corr window are partial
+	  textpp = textbuf + (ywin-1); // texture measure
+
+	  // start the minimum calc
+	  accpp = accp;
+	  nexv = val_epi16_7fff;
+	  for (d=0; d<dlen; d+=8, accpp+=8)
+	    nexv = _mm_min_epi16(nexv,*(__m128i *)accpp); // get window sum values
+
+	  // iterate over rows
+	  for (j=0; j<yim-ywin-YKERN+2; j+=8) 
+	    {
+	      //	      if (*textpp < tfilter_thresh && tfilter_thresh > 0)
+	      //		{
+	      //		  *disppp = FILTERED;
+	      //		  continue;
+	      //		}
+
+//	      intv = _mm_xor_si128(intv,intv); // zero - put here because it crashes gcc-4.1 when below
+//	      intv = zeros;
+
+	      // 8 rows at a time
+	      for (k=0; k<8; k++, textpp++) // do 8 values at a time
+		{
+		  // shift all values left 2 bytes for next entry
+		  cval = _mm_slli_si128(cval,2);
+		  pval = _mm_slli_si128(pval,2);
+		  nval = _mm_slli_si128(nval,2);
+		  uval = _mm_slli_si128(uval,2);
+		  ival = _mm_slli_si128(ival,2);
+
+		  // propagate minimum value
+		  // could use _mm_minpos_epu16 if available, still need two shuffles
+		  temv = _mm_shufflelo_epi16(nexv,0xb1); // shuffle words
+		  temv = _mm_shufflehi_epi16(temv,0xb1); // shuffle words
+		  minv = _mm_min_epi16(nexv,temv); // word mins propagated
+		  minv = _mm_min_epi16(minv,_mm_shuffle_epi32(minv,0xb1)); // shuffle dwords
+		  minv = _mm_min_epi16(minv,_mm_shuffle_epi32(minv,0x4e)); // shuffle dwords
+		  // save center value
+		  cval = _mm_or_si128(_mm_and_si128(cval,p0xfffffff0),_mm_and_si128(minv,p0x0000000f)); 
+		  // uniqueness threshold
+		  uniqth = _mm_mulhi_epu16(uniqinit,minv);
+		  uniqth = _mm_add_epi16(uniqth,minv);
+
+		  // find index of min, and uniqueness count
+		  // also do next min
+		  indv = indtop;
+		  indd = val_epi16_8;
+		  uniqcnt = zeros;
+		  nexv = val_epi16_7fff; // initial min value for next 8 rows
+		  for (d=0; d<dlen; d+=8, accp+=8)
+		    {
+		      indm = _mm_cmpgt_epi16(*(__m128i *)accp,minv); // compare to min
+		      indv = _mm_subs_epu16(indv,indd); // decrement indices
+		      indd = _mm_and_si128(indd,indm); // wipe out decrement at min
+		      unim = _mm_cmpgt_epi16(uniqth,*(__m128i *)accp); // compare to unique thresh		      
+		      nexv = _mm_min_epi16(nexv,*(__m128i *)(accp+dlen)); // get min for next 8 rows
+		      uniqcnt = _mm_sub_epi16(uniqcnt,unim); // add in uniq count
+		    } 
+		  indv = _mm_subs_epu16(indv,indd); // decrement indices to saturate at 0
+		  // propagate max value
+		  temv = _mm_shufflelo_epi16(indv,0xb1); // shuffle words
+		  temv = _mm_shufflehi_epi16(temv,0xb1); // shuffle words
+		  indv = _mm_max_epi16(indv,temv); // word maxs propagated
+		  indv = _mm_max_epi16(indv,_mm_shuffle_epi32(indv,0xb1)); // shuffle dwords
+		  indv = _mm_max_epi16(indv,_mm_shuffle_epi32(indv,0x4e)); // shuffle dwords
+
+		  // set up subpixel interpolation (center, previous, next correlation sums)
+		  dval = _mm_extract_epi16(indv,0);	// index of minimum
+		  nval = _mm_insert_epi16(nval,*(accp-dval),0);
+		  pval = _mm_insert_epi16(pval,*(accp-dval-2),0);
+		  // save disparity
+		  ival = _mm_or_si128(_mm_and_si128(ival,p0xfffffff0),_mm_and_si128(indv,p0x0000000f)); 
+
+		  // finish up uniqueness count
+		  uniqcnt = _mm_sad_epu8(uniqcnt,zeros); // add up each half
+		  uval = _mm_or_si128(_mm_and_si128(uval,p0xfffffff0),_mm_and_si128(uniqcnt,p0x0000000f)); 		  
+		  uniqcnt = _mm_add_epi32(uniqcnt, _mm_srli_si128(uniqcnt,8)); // add two halves
+		}
+
+	      // disparity interpolation (to 1/16 pixel)
+	      // use 16*|p-n| / 2*(p+n-2c)  [p = previous, c = center, n = next]
+	      // sign determined by p-n, add increment if positive
+	      // denominator is always positive
+	      // division done by subtraction and comparison
+	      //   computes successive bits of the interpolation
+	      // NB: need to check disparities 0 and d-1, skip interpolation
+
+	      // numerator
+	      numv = _mm_sub_epi16(pval,nval);
+	      sgnv = _mm_cmpgt_epi16(nval,pval); // sign, 0xffff for n>p
+	      numv = _mm_xor_si128(numv,sgnv);
+	      numv = _mm_sub_epi16(numv,sgnv);	// abs val here
+	      
+	      // denominator
+	      denv = _mm_add_epi16(pval,nval);
+	      denv = _mm_sub_epi16(denv,cval);
+	      denv = _mm_sub_epi16(denv,cval); // p+n-2c
+
+
+	      // first bit is always zero unless c = p or c = n, but
+	      //   for this case we'll get all 1's in the code below, which will round up
+	      // multiply num by 2 for second bit
+	      numv = _mm_add_epi16(numv,numv);	
+	      // second bit
+	      temv = _mm_cmpgt_epi16(numv,denv); // 0xffff if n>d
+	      intv = _mm_sub_epi16(intv,temv); // add 1 where n>d
+	      intv = _mm_slli_epi16(intv,1); // shift left
+	      numv = _mm_subs_epu16(numv,_mm_and_si128(temv,denv)); // sub out denominator
+	      numv = _mm_slli_epi16(numv,1); // shift left (x2)
+
+	      // third bit
+	      temv = _mm_cmpgt_epi16(numv,denv); // 0xffff if n>d
+	      intv = _mm_sub_epi16(intv,temv); // add 1 where n>d
+	      intv = _mm_slli_epi16(intv,1); // shift left
+	      numv = _mm_subs_epu16(numv,_mm_and_si128(temv,denv)); // sub out denominator
+	      numv = _mm_slli_epi16(numv,1); // shift left (x2)
+
+	      // fourth bit
+	      temv = _mm_cmpgt_epi16(numv,denv); // 0xffff if n>d
+	      intv = _mm_sub_epi16(intv,temv); // add 1 where n>d
+	      intv = _mm_slli_epi16(intv,1); // shift left
+	      numv = _mm_subs_epu16(numv,_mm_and_si128(temv,denv)); // sub out denominator
+	      numv = _mm_slli_epi16(numv,1); // shift left (x2)
+
+	      // fifth bit
+	      temv = _mm_cmpgt_epi16(numv,denv); // 0xffff if n>d
+	      intv = _mm_sub_epi16(intv,temv); // add 1 where n>d
+
+	      // round and do sign
+	      intv = _mm_add_epi16(intv,val_epi16_1);	// add in 1 to round
+	      intv = _mm_srli_epi16(intv,1);	// shift back
+	      intv = _mm_xor_si128(intv,sgnv); // get sign back
+	      intv = _mm_sub_epi16(intv,sgnv); // signed val here
+
+	      // add in increment, should be max +-8
+	      ival = _mm_slli_epi16(ival,4);
+	      ival = _mm_sub_epi16(ival,intv);
+	      
+	      // check uniq count
+	      // null out pval and nval mins
+	      unim = _mm_cmpgt_epi16(uniqth,nval); // compare to unique thresh
+	      uval = _mm_add_epi16(uval,unim); // sub out
+	      unim = _mm_cmpgt_epi16(uniqth,pval); // compare to unique thresh
+	      uval = _mm_add_epi16(uval,unim); // sub out
+	      uval = _mm_cmpgt_epi16(uval,val_epi16_1);	// 1s where uniqcnt > 1
+	      ival = _mm_or_si128(uval,ival); // set to -1
+
+	      // store in output array
+	      *disppp = _mm_extract_epi16(ival,7);
+	      disppp += xim;
+	      *disppp = _mm_extract_epi16(ival,6);
+	      disppp += xim;
+	      *disppp = _mm_extract_epi16(ival,5);
+	      disppp += xim;
+	      *disppp = _mm_extract_epi16(ival,4);
+	      disppp += xim;
+	      *disppp = _mm_extract_epi16(ival,3);
+	      disppp += xim;
+	      *disppp = _mm_extract_epi16(ival,2);
+	      disppp += xim;
+	      *disppp = _mm_extract_epi16(ival,1);
+	      disppp += xim;
+	      *disppp = _mm_extract_epi16(ival,0);
+	      disppp += xim;
+
+	    } // end of row loop
+
+	  dispp++;		// go to next column of disparity output
+	}
+
+    } // end of outer column loop
+
+  // clean up last few rows in case of overrun
+  dispp = disp + (yim - YKERN/2 - ywin/2)*xim;
+  for (i=0; i<7; i++, dispp+=xim)
+    memclr_si128((__m128i *)dispp, xim*sizeof(short));
+
+}
+#endif
+
+static inline void
+memclr(void *buf, int n)
+{
+  int i;
+  unsigned char *bb = (unsigned char *)buf;
+  for (i=0; i<n; i++)
+    *bb++ = 0;
+}
+
+void
+do_stereo_d(uchar *lim, uchar *rim, // input feature images
+	    short *disp,	// disparity output
+	    short *text,	// texture output
+	    int xim, int yim,	// size of images
+	    uchar ftzero,	// feature offset from zero
+	    int xwin, int ywin,	// size of corr window, usually square
+	    int dlen,		// size of disparity search, multiple of 8
+        int XKERN, int YKERN,
+	    int tfilter_thresh,	// texture filter threshold
+	    int ufilter_thresh,	// uniqueness filter threshold, percent
+	    uchar *buf	// buffer storage
+	    )
+
+{
+  const short FILTERED = -1;
+  int i,j,d;			// iteration indices
+  short *accp, *accpp, *accminp; // acc buffer ptrs
+  schar *limp, *rimp, *limpp, *rimpp, *limp2, *limpp2;	// feature image ptrs
+  schar *corrend, *corrp, *corrpp; // corr buffer ptrs
+  short *intp, *intpp;	// integration buffer pointers
+  short *textpp;		// texture buffer pointer
+  short *dispp, *disppp;	// disparity output pointer
+  short *textp;		// texture output pointer
+  short acc, newv;
+  schar  temp, newc;
+  short umin, uminthresh;	// for uniqueness check
+  int dval;			// disparity value
+  
+  short *intbuf, *textbuf, *accbuf;
+  schar *corrbuf;
+
+#define INTBUFSIZE ((yim-YKERN+ywin)*dlen+64)
+  intbuf  = (short *)buf;	// integration buffer
+#define TEXTBUFSIZE (yim+64)
+  textbuf = (short *)&buf[INTBUFSIZE*sizeof(short)];	// texture buffer
+#define ACCBUFSIZE (yim*dlen + 64)
+  accbuf  = (short *)&buf[(INTBUFSIZE+TEXTBUFSIZE)*sizeof(short)]; // accumulator buffer
+  corrbuf = (schar *)&buf[(INTBUFSIZE+TEXTBUFSIZE+ACCBUFSIZE)*sizeof(short)]; // correlation buffer
+
+  // clear out buffers
+  memclr(intbuf, dlen*yim*sizeof(short));
+  memclr(corrbuf, dlen*yim*xwin*sizeof(schar));
+  memclr(accbuf, dlen*yim*sizeof(short));
+  memclr(textbuf, yim*sizeof(short));
+
+  // set up corrbuf pointers
+  corrend = corrbuf + dlen*yim*xwin;
+  corrp = corrbuf;
+  accminp = 0;			// compiler warning
+
+  // start further out on line to take care of disparity offsets
+  limp = (schar *)lim + dlen - 1;
+  limp2 = limp;
+  rimp = (schar *)rim;
+  dispp = disp + xim*(ywin+YKERN-2)/2 + dlen + (xwin+XKERN-2)/2; 
+  textp = NULL;
+  if (text != NULL)		// optional texture buffer output
+    textp = text + dlen;
+
+  // iterate over columns first
+  // acc buffer is column-oriented, not line-oriented
+  // at each iteration, move across one column
+  for (i=0; i<xim-XKERN-dlen+2; i++, limp++, rimp++, corrp+=yim*dlen)
+    {    
+      accp = accbuf;
+      if (corrp >= corrend) corrp = corrbuf;
+      limpp = limp;
+      rimpp = rimp;
+      corrpp = corrp;
+      intp = intbuf+(ywin-1)*dlen; // intbuf current ptr
+      intpp = intbuf;	// intbuf old ptr
+          
+      // iterate over rows
+      for (j=0; j<yim-YKERN+1; j++, limpp+=xim, rimpp+=xim)
+	{
+	  // iterate over disparities
+	  // have to use an intbuf column for each disparity
+	  for (d=0; d<dlen; d++, intp++)
+	    {
+	      // do SAD calculation
+	      newc = abs(*limpp - rimpp[d]); // new corr val
+	      newv = newc - *corrpp + *intp; // new acc val
+	      *corrpp++ = newc;	// save new corr val
+	      *(intp+dlen) = newv; // save new acc val
+	      *accp++ += newv - *intpp++; // update window sum
+	    }
+	} 
+
+      // average texture computation
+      // use full corr window
+      memclr(intbuf, ywin*sizeof(short));
+      limpp = limp;
+      limpp2 = limp2;
+      intp = intbuf+ywin-1;
+      intpp = intbuf;
+      accpp = textbuf;
+      acc = 0;
+	  
+      // iterate over rows
+      // have to skip down a row each time...
+      // check for initial period
+      if (i < xwin)
+	{
+	  for (j=0; j<yim-YKERN+1; j++, limpp+=xim)
+	    {
+	      temp = abs(*limpp- ftzero); 
+	      *intp = temp;
+	      acc += *intp++ - *intpp++;
+	      *accpp++ += acc;
+	    }
+	}
+      else
+	{
+	  for (j=0; j<yim-YKERN+1; j++, limpp+=xim, limpp2+=xim)
+	    {
+	      temp = abs(*limpp-ftzero); 
+	      *intp = temp - abs(*limpp2-ftzero);
+	      acc += *intp++ - *intpp++;
+	      *accpp++ += acc;
+	    }
+          limp2++;
+	}
+          
+      // disparity extraction, find min of correlations
+      if (i >= xwin)		// far enough along...
+	{
+	  disppp = dispp;
+	  accp   = accbuf + (ywin-1)*dlen; // results within initial corr window are partial
+	  textpp = textbuf + (ywin-1); // texture measure
+
+	  // iterate over rows
+	  for (j=0; j<yim-ywin-YKERN+2; j++, accp+=dlen, disppp+=xim, textpp++) 
+	    {
+	      umin = 32000;
+	      accpp = accp;
+	      dval = -1;
+
+	      if (*textpp < tfilter_thresh)
+		{
+		  *disppp = FILTERED;
+		  continue;
+		}
+
+	      // find minimum and index over disparities
+	      for (d=dlen-1; d>=0; d--, accpp++)
+		{
+		  if (*accpp < umin)
+		    {
+		      accminp = accpp;
+		      umin = *accpp;
+		      dval = d;
+		    }
+		}  
+
+	      // check uniqueness
+	      accpp = accp;	      
+	      if (ufilter_thresh > 0)
+		{
+		  uminthresh = umin + (umin * ufilter_thresh) / 100;
+		  for (d=dlen-1; d>=0; d--, accpp++)
+		    {
+		      if (*accpp <= uminthresh && (d < dval-1 || d > dval+1))
+			{
+			  dval = -1;
+			  break;
+			}
+		    }
+		}
+	      if (dval < 0)
+		*disppp = FILTERED;
+	      else
+		{
+		  double c, p, n, v;
+		  c = (double)*accminp;
+		  p = (double)*(accminp+1);
+		  n = (double)*(accminp-1);
+		  v = (double)dval + (p-n)/(2*(p+n-2*c));
+		  *disppp = (int)(0.5 + 16*v);
+		}
+	    } // end of row loop
+
+	  dispp++;		// go to next column of disparity output
+	}
+
+    } // end of outer column loop
+
+}
+
+static const int DISPARITY_SHIFT = 4;
+
+#if CV_SSE2
+static void
+icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
+                                    CvMat* disp, CvStereoBMState* state )
+{
+    int x, y, d;
+    int wsz = state->SADWindowSize, wsz2 = wsz/2;
+    int ndisp = state->numberOfDisparities;
+    int mindisp = state->minDisparity;
+    int lofs = MAX(ndisp - 1 + mindisp, 0);
+    int rofs = -MIN(ndisp - 1 + mindisp, 0);
+    int width = left->cols, height = left->rows;
+    int width1 = width - rofs - ndisp + 1;
+    int ftzero = state->preFilterCap;
+    int textureThreshold = state->textureThreshold;
+    int uniquenessRatio = state->uniquenessRatio;
+    short FILTERED = (short)((mindisp - 1) << DISPARITY_SHIFT);
+
+    ushort *sad, *hsad0, *hsad, *hsad_sub;
+    int *htext;
+    uchar *cbuf0, *cbuf;
+    const uchar* lptr0 = left->data.ptr + lofs;
+    const uchar* rptr0 = right->data.ptr + rofs;
+    const uchar *lptr, *lptr_sub, *rptr;
+    short* dptr = disp->data.s;
+    int sstep = left->step;
+    int dstep = disp->step/sizeof(dptr[0]);
+    int cstep = height*ndisp;
+    const int TABSZ = 256;
+    uchar tab[TABSZ];
+    const __m128i d0_8 = _mm_setr_epi16(0,1,2,3,4,5,6,7), dd_8 = _mm_set1_epi16(8);
+
+    sad = (ushort*)cvAlignPtr(state->slidingSumBuf->data.ptr + sizeof(sad[0]));
+    hsad0 = (ushort*)cvAlignPtr(sad + ndisp + 1);
+    htext = (int*)cvAlignPtr((int*)(hsad0 + height*ndisp) + wsz2 + 2);
+    cbuf0 = (uchar*)cvAlignPtr(htext + height + wsz2 + 2);
+
+    for( x = 0; x < TABSZ; x++ )
+        tab[x] = (uchar)abs(x - ftzero);
+
+    // initialize buffers
+    memset( hsad0, 0, height*ndisp*sizeof(hsad0[0]) );
+    memset( htext - wsz2 - 1, 0, (height + wsz + 1)*sizeof(htext[0]) );
+
+    for( x = -wsz2-1; x < wsz2; x++ )
+    {
+        hsad = hsad0; cbuf = cbuf0 + (x + wsz2 + 1)*cstep;
+        lptr = lptr0 + MIN(MAX(x, -lofs), width-lofs-1);
+        rptr = rptr0 + MIN(MAX(x, -rofs), width-rofs-1);
+
+        for( y = 0; y < height; y++, hsad += ndisp, cbuf += ndisp, lptr += sstep, rptr += sstep )
+        {
+            int lval = lptr[0];
+            for( d = 0; d < ndisp; d++ )
+            {
+                int diff = abs(lval - rptr[d]);
+                cbuf[d] = (uchar)diff;
+                hsad[d] = (ushort)(hsad[d] + diff);
+            }
+            htext[y] += tab[lval];
+        }
+    }
+
+    // initialize the left and right borders of the disparity map
+    for( y = 0; y < height; y++ )
+    {
+        for( x = 0; x < lofs; x++ )
+            dptr[y*dstep + x] = FILTERED;
+        for( x = lofs + width1; x < width; x++ )
+            dptr[y*dstep + x] = FILTERED;
+    }
+    dptr += lofs;
+
+    for( x = 0; x < width1; x++, dptr++ )
+    {
+        int x0 = x - wsz2 - 1, x1 = x + wsz2;
+        const uchar* cbuf_sub = cbuf0 + ((x0 + wsz2 + 1) % (wsz + 1))*cstep;
+        uchar* cbuf = cbuf0 + ((x1 + wsz2 + 1) % (wsz + 1))*cstep;
+        hsad = hsad0;
+        lptr_sub = lptr0 + MIN(MAX(x0, -lofs), width-1-lofs);
+        lptr = lptr0 + MIN(MAX(x1, -lofs), width-1-lofs);
+        rptr = rptr0 + MIN(MAX(x1, -rofs), width-1-rofs);
+
+        for( y = 0; y < height; y++, cbuf += ndisp, cbuf_sub += ndisp,
+             hsad += ndisp, lptr += sstep, lptr_sub += sstep, rptr += sstep )
+        {
+            int lval = lptr[0];
+            __m128i lv = _mm_set1_epi8((char)lval), z = _mm_setzero_si128();
+            for( d = 0; d < ndisp; d += 16 )
+            {
+                __m128i rv = _mm_loadu_si128((const __m128i*)(rptr + d));
+                __m128i hsad_l = _mm_load_si128((__m128i*)(hsad + d));
+                __m128i hsad_h = _mm_load_si128((__m128i*)(hsad + d + 8));
+                __m128i cbs = _mm_load_si128((const __m128i*)(cbuf_sub + d));
+                __m128i diff = _mm_adds_epu8(_mm_subs_epu8(lv, rv), _mm_subs_epu8(rv, lv));
+                __m128i diff_h = _mm_sub_epi16(_mm_unpackhi_epi8(diff, z), _mm_unpackhi_epi8(cbs, z));
+                _mm_store_si128((__m128i*)(cbuf + d), diff);
+                diff = _mm_sub_epi16(_mm_unpacklo_epi8(diff, z), _mm_unpacklo_epi8(cbs, z));
+                hsad_h = _mm_add_epi16(hsad_h, diff_h);
+                hsad_l = _mm_add_epi16(hsad_l, diff);
+                _mm_store_si128((__m128i*)(hsad + d), hsad_l);
+                _mm_store_si128((__m128i*)(hsad + d + 8), hsad_h);
+            }
+            htext[y] += tab[lval] - tab[lptr_sub[0]];
+        }
+
+        // fill borders
+        for( y = 0; y <= wsz2; y++ )
+        {
+            htext[height+y] = htext[height-1];
+            htext[-y-1] = htext[0];
+        }
+
+        // initialize sums
+        for( d = 0; d < ndisp; d++ )
+            sad[d] = (ushort)(hsad0[d]*(wsz2 + 2));
+        
+        hsad = hsad0 + ndisp;
+        for( y = 1; y < wsz2; y++, hsad += ndisp )
+            for( d = 0; d < ndisp; d++ )
+                sad[d] = (ushort)(sad[d] + hsad[d]);
+        int tsum = 0;
+        for( y = -wsz2-1; y < wsz2; y++ )
+            tsum += htext[y];
+
+        // finally, start the real processing
+        for( y = 0; y < height; y++ )
+        {
+            int minsad = INT_MAX, mind = -1;
+            hsad = hsad0 + MIN(y + wsz2, height-1)*ndisp;
+            hsad_sub = hsad0 + MAX(y - wsz2 - 1, 0)*ndisp;
+            __m128i minsad8 = _mm_set1_epi16(SHRT_MAX);
+            __m128i mind8 = _mm_set1_epi16(-1), d8 = d0_8, mask;
+
+            for( d = 0; d < ndisp; d += 8 )
+            {
+                __m128i v0 = _mm_load_si128((__m128i*)(hsad_sub + d));
+                __m128i v1 = _mm_load_si128((__m128i*)(hsad + d));
+                __m128i sad8 = _mm_load_si128((__m128i*)(sad + d));
+                sad8 = _mm_sub_epi16(sad8, v0);
+                sad8 = _mm_add_epi16(sad8, v1);
+
+                mask = _mm_cmpgt_epi16(minsad8, sad8);
+                _mm_store_si128((__m128i*)(sad + d), sad8);
+                minsad8 = _mm_min_epi16(minsad8, sad8);
+                mind8 = _mm_xor_si128(mind8,_mm_and_si128(_mm_xor_si128(d8,mind8),mask));
+                d8 = _mm_add_epi16(d8, dd_8);
+            }
+
+            __m128i minsad82 = _mm_unpackhi_epi64(minsad8, minsad8);
+            __m128i mind82 = _mm_unpackhi_epi64(mind8, mind8);
+            mask = _mm_cmpgt_epi16(minsad8, minsad82);
+            mind8 = _mm_xor_si128(mind8,_mm_and_si128(_mm_xor_si128(mind82,mind8),mask));
+            minsad8 = _mm_min_epi16(minsad8, minsad82);
+
+            minsad82 = _mm_shufflelo_epi16(minsad8, _MM_SHUFFLE(3,2,3,2));
+            mind82 = _mm_shufflelo_epi16(mind8, _MM_SHUFFLE(3,2,3,2));
+            mask = _mm_cmpgt_epi16(minsad8, minsad82);
+            mind8 = _mm_xor_si128(mind8,_mm_and_si128(_mm_xor_si128(mind82,mind8),mask));
+            minsad8 = _mm_min_epi16(minsad8, minsad82);
+
+            minsad82 = _mm_shufflelo_epi16(minsad8, 1);
+            mind82 = _mm_shufflelo_epi16(mind8, 1);
+            mask = _mm_cmpgt_epi16(minsad8, minsad82);
+            mind8 = _mm_xor_si128(mind8,_mm_and_si128(_mm_xor_si128(mind82,mind8),mask));
+            mind = (short)_mm_cvtsi128_si32(mind8);
+            minsad = sad[mind];
+            tsum += htext[y + wsz2] - htext[y - wsz2 - 1];
+            if( tsum < textureThreshold )
+            {
+                dptr[y*dstep] = FILTERED;
+                continue;
+            }
+
+            if( uniquenessRatio > 0 )
+            {
+                int thresh = minsad + (minsad * uniquenessRatio/100);
+                __m128i thresh8 = _mm_set1_epi16((short)(thresh + 1));
+                __m128i d1 = _mm_set1_epi16((short)(mind-1)), d2 = _mm_set1_epi16((short)(mind+1));
+                __m128i d8 = d0_8;
+
+                for( d = 0; d < ndisp; d += 8 )
+                {
+                    __m128i sad8 = _mm_load_si128((__m128i*)(sad + d));
+                    __m128i mask = _mm_cmpgt_epi16( thresh8, sad8 );
+                    mask = _mm_and_si128(mask, _mm_or_si128(_mm_cmpgt_epi16(d1,d8), _mm_cmpgt_epi16(d8,d2)));
+                    if( _mm_movemask_epi8(mask) )
+                        break;
+                    d8 = _mm_add_epi16(d8, dd_8);
+                }
+                if( d < ndisp )
+                {
+                    dptr[y*dstep] = FILTERED;
+                    continue;
+                }
+            }
+            
+            {
+            sad[-1] = sad[1];
+            sad[ndisp] = sad[ndisp-2];
+            int p = sad[mind+1], n = sad[mind-1], d = p + n - 2*sad[mind];
+            dptr[y*dstep] = (short)(((ndisp - mind - 1 + mindisp)*256 + (d != 0 ? (p-n)*128/d : 0) + 15) >> 4);
+            }
+        }
+    }
+}
+#endif
+
+static void
+icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
+                               CvMat* disp, CvStereoBMState* state )
+{
+    int x, y, d;
+    int wsz = state->SADWindowSize, wsz2 = wsz/2;
+    int ndisp = state->numberOfDisparities;
+    int mindisp = state->minDisparity;
+    int lofs = MAX(ndisp - 1 + mindisp, 0);
+    int rofs = -MIN(ndisp - 1 + mindisp, 0);
+    int width = left->cols, height = left->rows;
+    int width1 = width - rofs - ndisp + 1;
+    int ftzero = state->preFilterCap;
+    int textureThreshold = state->textureThreshold;
+    int uniquenessRatio = state->uniquenessRatio;
+    short FILTERED = (short)((mindisp - 1) << DISPARITY_SHIFT);
+
+    int *sad, *hsad0, *hsad, *hsad_sub, *htext;
+    uchar *cbuf0, *cbuf;
+    const uchar* lptr0 = left->data.ptr + lofs;
+    const uchar* rptr0 = right->data.ptr + rofs;
+    const uchar *lptr, *lptr_sub, *rptr;
+    short* dptr = disp->data.s;
+    int sstep = left->step;
+    int dstep = disp->step/sizeof(dptr[0]);
+    int cstep = height*ndisp;
+    const int TABSZ = 256;
+    uchar tab[TABSZ];
+
+    sad = (int*)cvAlignPtr(state->slidingSumBuf->data.ptr + sizeof(sad[0]));
+    hsad0 = (int*)cvAlignPtr(sad + ndisp + 1);
+    htext = (int*)cvAlignPtr((int*)(hsad0 + height*ndisp) + wsz2 + 2);
+    cbuf0 = (uchar*)cvAlignPtr(htext + height + wsz2 + 2);
+
+    for( x = 0; x < TABSZ; x++ )
+        tab[x] = (uchar)abs(x - ftzero);
+
+    // initialize buffers
+    memset( hsad0, 0, height*ndisp*sizeof(hsad0[0]) );
+    memset( htext - wsz2 - 1, 0, (height + wsz + 1)*sizeof(htext[0]) );
+
+    for( x = -wsz2-1; x < wsz2; x++ )
+    {
+        hsad = hsad0; cbuf = cbuf0 + (x + wsz2 + 1)*cstep;
+        lptr = lptr0 + MIN(MAX(x, -lofs), width-lofs-1);
+        rptr = rptr0 + MIN(MAX(x, -rofs), width-rofs-1);
+
+        for( y = 0; y < height; y++, hsad += ndisp, cbuf += ndisp, lptr += sstep, rptr += sstep )
+        {
+            int lval = lptr[0];
+            for( d = 0; d < ndisp; d++ )
+            {
+                int diff = abs(lval - rptr[d]);
+                cbuf[d] = (uchar)diff;
+                hsad[d] = (int)(hsad[d] + diff);
+            }
+            htext[y] += tab[lval];
+        }
+    }
+
+    // initialize the left and right borders of the disparity map
+    for( y = 0; y < height; y++ )
+    {
+        for( x = 0; x < lofs; x++ )
+            dptr[y*dstep + x] = FILTERED;
+        for( x = lofs + width1; x < width; x++ )
+            dptr[y*dstep + x] = FILTERED;
+    }
+    dptr += lofs;
+
+    for( x = 0; x < width1; x++, dptr++ )
+    {
+        int x0 = x - wsz2 - 1, x1 = x + wsz2;
+        const uchar* cbuf_sub = cbuf0 + ((x0 + wsz2 + 1) % (wsz + 1))*cstep;
+        uchar* cbuf = cbuf0 + ((x1 + wsz2 + 1) % (wsz + 1))*cstep;
+        hsad = hsad0;
+        lptr_sub = lptr0 + MIN(MAX(x0, -lofs), width-1-lofs);
+        lptr = lptr0 + MIN(MAX(x1, -lofs), width-1-lofs);
+        rptr = rptr0 + MIN(MAX(x1, -rofs), width-1-rofs);
+
+        for( y = 0; y < height; y++, cbuf += ndisp, cbuf_sub += ndisp,
+             hsad += ndisp, lptr += sstep, lptr_sub += sstep, rptr += sstep )
+        {
+            int lval = lptr[0];
+            for( d = 0; d < ndisp; d++ )
+            {
+                int diff = abs(lval - rptr[d]);
+                cbuf[d] = (uchar)diff;
+                hsad[d] = hsad[d] + diff - cbuf_sub[d];
+            }
+            htext[y] += tab[lval] - tab[lptr_sub[0]];
+        }
+
+        // fill borders
+        for( y = 0; y <= wsz2; y++ )
+        {
+            htext[height+y] = htext[height-1];
+            htext[-y-1] = htext[0];
+        }
+
+        // initialize sums
+        for( d = 0; d < ndisp; d++ )
+            sad[d] = (int)(hsad0[d]*(wsz2 + 2));
+        
+        hsad = hsad0 + ndisp;
+        for( y = 1; y < wsz2; y++, hsad += ndisp )
+            for( d = 0; d < ndisp; d++ )
+                sad[d] = (int)(sad[d] + hsad[d]);
+        int tsum = 0;
+        for( y = -wsz2-1; y < wsz2; y++ )
+            tsum += htext[y];
+
+        // finally, start the real processing
+        for( y = 0; y < height; y++ )
+        {
+            int minsad = INT_MAX, mind = -1;
+            hsad = hsad0 + MIN(y + wsz2, height-1)*ndisp;
+            hsad_sub = hsad0 + MAX(y - wsz2 - 1, 0)*ndisp;
+
+            for( d = 0; d < ndisp; d++ )
+            {
+                int currsad = sad[d] + hsad[d] - hsad_sub[d];
+                sad[d] = currsad;
+                if( currsad < minsad )
+                {
+                    minsad = currsad;
+                    mind = d;
+                }
+            }
+            tsum += htext[y + wsz2] - htext[y - wsz2 - 1];
+            if( tsum < textureThreshold )
+            {
+                dptr[y*dstep] = FILTERED;
+                continue;
+            }
+
+            if( uniquenessRatio > 0 )
+            {
+                int thresh = minsad + (minsad * uniquenessRatio/100);
+                for( d = 0; d < ndisp; d++ )
+                {
+                    if( sad[d] <= thresh && (d < mind-1 || d > mind+1))
+                        break;
+                }
+                if( d < ndisp )
+                {
+                    dptr[y*dstep] = FILTERED;
+                    continue;
+                }
+            }
+            
+            {
+            sad[-1] = sad[1];
+            sad[ndisp] = sad[ndisp-2];
+            int p = sad[mind+1], n = sad[mind-1], d = p + n - 2*sad[mind];
+            dptr[y*dstep] = (short)(((ndisp - mind - 1 + mindisp)*256 + (d != 0 ? (p-n)*128/d : 0) + 15) >> 4);
+            }
+        }
+    }
+}
+
+
+
+CV_IMPL void
+cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
+                              CvArr* disparr, CvStereoBMState* state )
+{
+    CV_FUNCNAME( "cvFindStereoCorrespondenceBM" );
+
+    __BEGIN__;
+
+    CvMat lstub, *left0 = cvGetMat( leftarr, &lstub );
+    CvMat rstub, *right0 = cvGetMat( rightarr, &rstub );
+    CvMat left, right;
+    CvMat dstub, *disp = cvGetMat( disparr, &dstub );
+    int bufSize, width, width1, height;
+    int wsz, ndisp, mindisp, lofs, rofs;
+
+    if( !CV_ARE_SIZES_EQ(left0, right0) ||
+        !CV_ARE_SIZES_EQ(disp, left0) )
+        CV_ERROR( CV_StsUnmatchedSizes, "All the images must have the same size" );
+
+    if( CV_MAT_TYPE(left0->type) != CV_8UC1 ||
+        !CV_ARE_TYPES_EQ(left0, right0) ||
+        CV_MAT_TYPE(disp->type) != CV_16SC1 )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "Both input images must have 8uC1 format and the disparity image must have 16sC1 format" );
+
+    if( !state )
+        CV_ERROR( CV_StsNullPtr, "Stereo BM state is NULL." );
+
+    if( state->preFilterType != CV_STEREO_BM_NORMALIZED_RESPONSE )
+        CV_ERROR( CV_StsOutOfRange, "preFilterType must be =CV_STEREO_BM_NORMALIZED_RESPONSE" );
+
+    if( state->preFilterSize < 5 || state->preFilterSize > 255 || state->preFilterSize % 2 == 0 )
+        CV_ERROR( CV_StsOutOfRange, "preFilterSize must be odd and be within 5..21+" );
+
+    if( state->preFilterCap < 1 || state->preFilterCap > 63 )
+        CV_ERROR( CV_StsOutOfRange, "preFilterCap must be within 1..31+" );
+
+    if( state->SADWindowSize < 5 || state->SADWindowSize > 255 || state->SADWindowSize % 2 == 0 ||
+        state->SADWindowSize >= MIN(left0->cols, left0->rows) )
+        CV_ERROR( CV_StsOutOfRange, "SADWindowSize must be odd, be within 5..255 and "
+                                    "be not larger than image width or height" );
+
+    if( state->numberOfDisparities <= 0 || state->numberOfDisparities % 16 != 0 )
+        CV_ERROR( CV_StsOutOfRange, "numberOfDisparities must be positive and divisble by 16" );
+    if( state->textureThreshold < 0 )
+        CV_ERROR( CV_StsOutOfRange, "texture threshold must be non-negative" );
+    if( state->uniquenessRatio < 0 )
+        CV_ERROR( CV_StsOutOfRange, "uniqueness ratio must be non-negative" );
+
+    if( !state->preFilteredImg0 ||
+        state->preFilteredImg0->cols*state->preFilteredImg0->rows < left0->cols*left0->rows )
+    {
+        cvReleaseMat( &state->preFilteredImg0 );
+        cvReleaseMat( &state->preFilteredImg1 );
+
+        state->preFilteredImg0 = cvCreateMat( left0->rows, left0->cols, CV_8U );
+        state->preFilteredImg1 = cvCreateMat( left0->rows, left0->cols, CV_8U );
+    }
+    left = cvMat(left0->rows, left0->cols, CV_8U, state->preFilteredImg0->data.ptr);
+    right = cvMat(right0->rows, right0->cols, CV_8U, state->preFilteredImg1->data.ptr);
+    
+    mindisp = state->minDisparity;
+    ndisp = state->numberOfDisparities;
+
+    width = left0->cols;
+    height = left0->rows;
+    lofs = MAX(ndisp - 1 + mindisp, 0);
+    rofs = -MIN(ndisp - 1 + mindisp, 0);
+    width1 = width - rofs - ndisp + 1;
+    if( lofs >= width || rofs >= width || width1 < 1 )
+    {
+        int FILTERED = (short)((state->minDisparity - 1) << DISPARITY_SHIFT);
+        cvSet( disp, cvScalarAll(FILTERED) );
+        EXIT;
+    }
+
+    wsz = state->SADWindowSize;
+    bufSize = (ndisp + 2)*sizeof(int) + height*ndisp*sizeof(int) +
+        (height + wsz + 2)*sizeof(int) + height*ndisp*(wsz+1)*sizeof(uchar);
+    bufSize = MAX(bufSize, (width + state->preFilterSize + 2)*(int)sizeof(int)) + 1024;
+    if( !state->slidingSumBuf || state->slidingSumBuf->cols < bufSize )
+    {
+        cvReleaseMat( &state->slidingSumBuf );
+        state->slidingSumBuf = cvCreateMat( 1, bufSize, CV_8U );
+    }
+    
+    icvPrefilter( left0, &left, state->preFilterSize, state->preFilterCap, state->slidingSumBuf );
+    icvPrefilter( right0, &right, state->preFilterSize, state->preFilterCap, state->slidingSumBuf );
+
+#if CV_SSE2
+    if( state->preFilterCap <= 31 && state->SADWindowSize <= 21 )
+    {
+        //icvFindStereoCorrespondenceBM_SSE2( &left, &right, disp, state );
+        do_stereo_d_fast( left.data.ptr, right.data.ptr,
+            disp->data.s, 0, width, height,
+            0, state->SADWindowSize, state->SADWindowSize,
+            ndisp, 0, state->uniquenessRatio, 7, 7,
+            state->slidingSumBuf->data.ptr );
+        EXIT;
+    }
+#endif
+
+    icvFindStereoCorrespondenceBM( &left, &right, disp, state );
+
+    __END__;
+}
+
+/* End of file. */

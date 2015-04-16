@@ -1,0 +1,10 @@
+SET(SRC_SaveFrameTXTModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SaveFrameTXTModule/cpp/SaveFrameTXTModule.cpp 
+) 
+SET(HEADER_SaveFrameTXTModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SaveFrameTXTModule/SaveFrameTXTModule.h 
+) 
+SET(FILES_MODULES_SaveFrameTXTModule 
+${SRC_SaveFrameTXTModule} 
+${HEADER_SaveFrameTXTModule} 
+) 

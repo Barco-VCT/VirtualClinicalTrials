@@ -1,0 +1,10 @@
+SET(SRC_Apply3x1DLutModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/Apply3x1DLutModule/cpp/Apply3x1DLutModule.cpp 
+) 
+SET(HEADER_Apply3x1DLutModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/Apply3x1DLutModule/Apply3x1DLutModule.h 
+) 
+SET(FILES_MODULES_Apply3x1DLutModule 
+${SRC_Apply3x1DLutModule} 
+${HEADER_Apply3x1DLutModule} 
+) 

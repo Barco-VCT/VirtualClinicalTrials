@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SuperXML>
+	<LIST_OF_ITERATIONS name = "pipeline" value="1">	
+	</LIST_OF_ITERATIONS>
+	
+	<LIST_OF_PARAMETERS>
+		<LocalParameter name = "REF">
+		</LocalParameter>				
+	</LIST_OF_PARAMETERS>
+	
+	<TEMPLATE_MEVIC_SIMULATION>
+		<REF>
+			<ReaderModule name="ReaderModule">
+				<Filename dataType="string" value="#0\input_ref\output\XYZOUTREF.bin" />
+				<Compression dataType="bool" value="1" />
+			</ReaderModule>
+			<ReaderModule name="ReaderModule 2">
+				<Filename dataType="string" value="#0\input_test\output\XYZOUTTEST.bin" />
+				<Compression dataType="bool" value="1" />
+			</ReaderModule>	
+			<DeltaE2000Module name="DeltaE2000Module">
+			</DeltaE2000Module>	
+			<SaveFrameTXTModule>
+				<Filename dataType="char" value="#0\output\dE2000"/>
+				<ComponentToWrite dataType="int" value="0"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameTXTModule>			
+		</REF>	
+	</TEMPLATE_MEVIC_SIMULATION>
+</SuperXML>
+	

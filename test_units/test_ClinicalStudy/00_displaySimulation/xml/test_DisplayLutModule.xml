@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SuperXML>
+	<LIST_OF_ITERATIONS name = "pipeline" value="1">	
+	</LIST_OF_ITERATIONS>
+	
+	<LIST_OF_PARAMETERS>
+		<LocalParameter name = "REF">
+			<SequenceRawGeneratorModule name="directory" value = "#0"/>
+			<WriterModule name="Filename" value="#2"/>
+		</LocalParameter>				
+	</LIST_OF_PARAMETERS>
+
+	<TEMPLATE_MEVIC_SIMULATION>
+		<REF>
+			<SequenceRawGeneratorModule>
+				<directory dataType="char" value = "$"/>
+				<number_of_slices dataType="int" value = "1"/>
+				<width dataType = "int" value = "64"/>
+				<height dataType = "int" value = "64"/>
+				<nbBitsRange dataType = "int" value = "8"/>
+				<_0bigEndian_1littleEndian dataType = "int" value = "1"/>
+				<nbBitsOutput dataType = "int" value = "8"/>
+				<nbBitsPrecision dataType = "int" value = "16"/>
+				<_1WhiteIs0_0Otherwise dataType = "int" value = "0"/>
+				<frame_repeat dataType = "int" value = "1"/>
+				<_1RGB_0GRAY dataType = "int" value = "0"/>			
+			</SequenceRawGeneratorModule>
+			 <VideoCardModule name="VideoCardModule">
+				<number_of_bits_out dataType="int" description="LUT" value="8" />
+			</VideoCardModule>
+		 	<DisplayModule>
+				<_1Color_0Monochrome dataType="int" value="0"/>
+				<filenameNativeCurveGray dataType="char" value = ".\input\gray.csv"/>
+				<nbBits dataType="int" value="8"/>
+				<frequency dataType="int" value="50"/>	
+			</DisplayModule>
+			<DisplayLutModule>
+			</DisplayLutModule>
+			<ConversionDDL2CDModule name ="ConversionDDL2CDModule">
+				<_1ddl2cd_0cd2ddl dataType="char" value="1"/>
+			</ConversionDDL2CDModule>
+			<SaveFrameTXTModule>
+				<Filename dataType="char" value="#1\GRAYIN"/>
+				<ComponentToWrite dataType="int" value="0"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameTXTModule>
+			<SaveFrameTXTModule>
+				<Filename dataType="char" value="#1\VIDEOCARD"/>
+				<ComponentToWrite dataType="int" value="1"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameTXTModule>
+			<SaveFrameTXTModule>
+				<Filename dataType="char" value="#1\GRAYGSDF"/>
+				<ComponentToWrite dataType="int" value="2"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameTXTModule>	
+			<SaveFrameTXTModule>
+				<Filename dataType="char" value="#1\XYZ"/>
+				<ComponentToWrite dataType="int" value="3"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameTXTModule>
+			<WriterModule>
+				<Filename dataType="char" value="$"/>
+				<compression dataType="bool" value="1"/>
+				<savelastcomponent dataType="bool" value="1"/>
+			</WriterModule>	
+		</REF>	
+	</TEMPLATE_MEVIC_SIMULATION>
+</SuperXML>
+	

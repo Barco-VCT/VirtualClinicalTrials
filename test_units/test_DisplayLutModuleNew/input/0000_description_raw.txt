@@ -1,0 +1,4 @@
+file name: ./output/RGBLUT
+width: 64
+height: 64
+type imageJ: 16-bit Unsigned

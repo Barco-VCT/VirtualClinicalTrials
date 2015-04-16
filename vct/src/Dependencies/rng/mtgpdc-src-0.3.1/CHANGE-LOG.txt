@@ -1,0 +1,28 @@
+ver. 0.3.1
+-------
+Fix bug in mtgp64dc. bug:All tempering parameters searched by mtgp64dc were
+zeros.
+
+ver. 0.3
+-------
+A small bug in search_temper.hpp is fixed.  The bug effects only on
+the least significant 5 bits, but it makes the dimension of
+equidistribution of the LSBs smaller than they should be.
+
+In addition, we modified the algorithm of searching tempering
+parameters, so that the algorithm tempers the dimensions of
+equidistribution of LSBs too, in addition to those of MSBs.  This is
+to address a report on some statistical tests of these LSBs due to
+Jonathan Passerat-Palmbach, David R.C. Hill and Claude Mazel.  We
+thank them.
+
+ver. 0.2
+-------
+a bug in the get_range functon in random_util.hpp is fixed.
+a bug of delete operator in mt19937.hpp is fixed.
+shortest_basis.hpp is changed not to use boost::ptr_vector.
+allow large MEXP 110503 and 216091
+
+ver. 0.1
+-------
+start

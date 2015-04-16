@@ -1,0 +1,277 @@
+\chapter{sRGB display simulation}
+\minitoc{}
+
+This simulation loads a RGB image or sequence and then simulate a pure sRGB display by converting the $RGB$ values to $XYZ$ triplets.
+
+\section{Introduction}
+
+This simulation aims to load an RGB image or sequence as input and then apply 1D LUTs one per channel (R,G,B).
+
+The output is saved in raw and in txt files.
+
+\section{Input}
+
+\subsection{Input image}
+
+The input image is a 24 bit RGB image saved in a raw file (64x64pixels stored as 24bit RGB).
+
+To open it with ImageJ by instance, use "import raw file" with the following options:
+\begin{itemize}
+\item Image type: 24-bit RGB
+\item Width: 64 pixels
+\item Height: 64 pixels
+\item Offset to first image: 0 bytes
+\item Number of images: 1
+\item Gap between images: 0
+\item White is not zero
+\item Little-endian byte order
+\item Not open all files in folder
+\item Not use virtual stack
+\end{itemize}
+
+The input image is a grayscale gradient is shown in the figure \ref{fig:gradient2RGB}.
+
+\begin{figure}[!htb]
+\begin{center}
+\includegraphics[width=0.5\columnwidth]{./01_Apply3x1DLutModule/images/24RGBL.png}
+\caption{Input grayscale gradient image.}\label{fig:gradient2RGB}
+\end{center}
+\end{figure}
+
+\section{Command}
+
+For running the simulation, the following command is needed:
+
+\lstset{language=C++}
+\begin{lstlisting}
+"..\vct\VCT.exe" SuperXML ".\xml\test_SRgbDisplayModule.xml" "."
+\end{lstlisting}
+
+The first argument is the path to the VCT executable. The second argument is simply the key word "SuperXML" and the third one is the path to the xml file. Any additional parameters are used within the xml file, in this case, it corresponds to an input path.
+
+\section{xml}
+
+The input xml file is:
+
+\lstset{language=XML}
+\begin{lstlisting}
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SuperXML>
+	<LIST_OF_ITERATIONS name = "pipeline" value="1">	
+	</LIST_OF_ITERATIONS>
+	
+	<LIST_OF_PARAMETERS>
+		<LocalParameter name = "REF">
+			<SequenceRawGeneratorModule name="directory" value = "#0\input\"/>
+		</LocalParameter>				
+	</LIST_OF_PARAMETERS>
+
+	<TEMPLATE_MEVIC_SIMULATION>
+		<REF>
+			<SequenceRawGeneratorModule>
+				<directory dataType="char" value = "$"/>
+				<number_of_slices dataType="int" value = "1"/>
+				<width dataType = "int" value = "64"/>
+				<height dataType = "int" value = "64"/>
+				<nbBitsRange dataType = "int" value = "8"/>
+				<_0bigEndian_1littleEndian dataType = "int" value = "0"/>
+				<nbBitsOutput dataType = "int" value = "8"/>
+				<nbBitsPrecision dataType = "int" value = "24"/>
+				<_1WhiteIs0_0Otherwise dataType = "int" value = "0"/>
+				<frame_repeat dataType = "int" value = "1"/>
+				<_1RGB_0GRAY dataType = "int" value = "1"/>			
+			</SequenceRawGeneratorModule>
+			<SRgbDisplayModule>
+				<gamma dataType="float" value="2.2"/>
+				<lumMax dataType="float" value="250.0"/>
+				<contrast dataType="unsigned int" value="750"/>
+				<illum dataType="string" value="D50"/>
+			</SRgbDisplayModule>
+			<SaveFrameRAWModule>
+				<Filename dataType="char" value="#0\output\sRGB"/>
+				<ComponentToWrite dataType="int" value="0"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameRAWModule>			
+			<SaveFrameRAWModule>
+				<Filename dataType="char" value="#0\output\sRGB2XYZD50"/>
+				<ComponentToWrite dataType="int" value="1"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameRAWModule>			
+		</REF>	
+	</TEMPLATE_MEVIC_SIMULATION>
+</SuperXML>
+\end{lstlisting}
+
+For the module "SequenceRawGeneratorModule", the character sequence "$\#0$" is replaced by the additional input argument given at the execution of the program. 
+
+\section{Output}
+
+The output is a an image or a sequence or XYZ frames.
+
+\section{Module: SequenceRawGeneratorModule}
+
+\subsection{Parameter: "directory"}
+
+This module is used for loading an image or a sequence of images. The first parameter of this module corresponds to a path of a directory. If the directory has more than one file with the extension "raw", the module will open directly the files with the raw extension depending on the following parameter: "number\_of\_slices".
+
+\subsection{Parameter: "number\_of\_slices"}
+
+If this parameter is equal to "1" then only one image is opened.
+
+\subsection{Parameter: image-sequence}
+
+The parameters from "" to "" correspond to the image or the sequence.
+
+\subsection{Parameter: "frame\_repeat"}
+
+In order to generate a sequence of frames for the display simulation, this parameter can be used. If this parameter is equal to 1, one slice from the input sequence corresponds to 1 frame in the simulation. In order to repeat each slice this parameter can be used with a value superior to 1. This frame repeat parameter can be in float like described in \cite{Mar12} in order to simulate a browsing speed that is not an integer.
+
+Let $F_{browse}$ show the slice browsing speed, F$_{refresh}$ show the frame refresh rate (a display property in $Hz$), and $FR$ show frame repeat. $F_{browse}$ = $\frac{F_{refresh}}{F}$. For example, at $F_{refresh}$ of $50$ frame per second ($fps$), if each slice is fed twice to the display at consecutive refreshes ($FR = 2$), the apparent slice browsing speed is $\frac{50}{2} = 25$ slice per second ($sps$). In other words, $FR = \frac{F_{refresh}}{F_{browse}} = \frac{50}{25} = 2$. Hence, the browsing speeds that can be simulated with integer FRs are very limited. By allowing a fractional frame repeat, one can have arbitrary browsing speeds as follows. As an example, $F_{browse}$ of $40$ $sps$ can be achieved if we make $5$ frames out of every $4$ slices. In this case $FR = \frac{F_{refresh}}{F_{browse}} = \frac{50}{40} = \frac{5}{4}$. To that end, we use an error accumulation method to find out which slices should be repeated: starting from the beginning of the stack (the residue is initially set to zero), each slice is copied floor(FR+residue) times, generating that many frames, and the residue is updated to $FR+residue-floor(FR+residue)$. This way, when the residue goes above one, an extra frame with a copy of the current slice is inserted. To have a slice browsing speed of $40$ $sps$, on a 41-slice stack (comprised of slices $1$, $2$, \ldots{}, $41$), when $F_{refresh}$ is $50$ $fps$, the following slices are written to the frame buffer: $1$ $2$ $3$ $4$ $4$ $5$ $6$ $7$ $8$ $8$ $9$ $10$ $11$ $12$ $12$ $13$ $14$ $15$ $16$ $16$ $17$ $18$ $19$ $20$ $20$ $21$ $22$ $23$ $24$ $24$ $25$ $26$ $27$ $28$ $28$ $29$ $30$ $31$ $32$ $32$ $33$ $34$ $35$ $36$ $36$ $37$ $38$ $39$ $40$ $40$ $41$. In this example, slice $n$ is copied twice if $mod(n, 4) = 0$, and all other slices are copied only once.
+
+\section{Module: SRgbDisplayModule}
+
+This module converts $RGB$ input to $XYZ$ values that correspond to a perfect $sRGB$ display.
+
+\subsection{Parameter: "gamma"}
+
+By default the gamma value is "$\gamma=2.2$". 
+
+\subsection{Parameter: "lumMax"}
+
+This parameter "lumMax" corresponds to the maximum luminance in $cd/m^2$ given by the white point. The default value is $lumMax = 250cd/m^2$.
+
+\subsection{Parameter: "contrast"}
+
+This parameter "contrast" corresponds to the contrast of the display defined as:
+
+\begin{equation}
+C = \frac{lumMax}{lumMin}
+\end{equation}
+
+The contrast has values superior to "1". The default value is $C=750$.
+
+\subsection{Parameter: "illum"}
+
+The parameter "illum" is the illuminant by default 	"D65". I can be either "D50" or "D65".
+
+Based on the different parameters, the conversion is done according to:
+
+$R$, $G$, $B$ $\in\quad[0,1]$
+
+\begin{displaymath}
+	if((R,G,B) > 0.04045)
+\end{displaymath}
+\begin{displaymath}
+		(R,G,B) = (\frac{((R,G,B) + 0.055)}{1.055})^{\gamma};
+\end{displaymath}
+\begin{displaymath}
+	else
+\end{displaymath}
+\begin{displaymath}
+		(R,G,B) =  \frac{(R,G,B)}{12.92};
+\end{displaymath}
+	
+In case of "D65":
+	
+\begin{eqnarray}
+	\begin{bmatrix}	X' \\ Y' \\ Z' \end{bmatrix} 
+	&=& \begin{bmatrix} 0.4124564 &  0.3575761 &  0.1804375 \\  0.2126729 & 0.7151522 & 0.0721750 \\ 0.0193339 &  0.1191920 & 0.9503041 \end{bmatrix} 
+	\begin{bmatrix}	R \\ G \\ B \end{bmatrix}
+	\label{eqmat1}
+\end{eqnarray}
+
+The white point ($X_0$,$Y_0$,$Z_0$): 
+\begin{eqnarray}
+	\begin{bmatrix}	X_0 \\ Y_0 \\ Z_0 \end{bmatrix} 
+	&=& \begin{bmatrix} 0.4124564 &  0.3575761 &  0.1804375 \\  0.2126729 & 0.7151522 & 0.0721750 \\ 0.0193339 &  0.1191920 & 0.9503041 \end{bmatrix} 
+	\begin{bmatrix}	1 \\ 1 \\ 1 \end{bmatrix}
+	\label{eqmat1}
+\end{eqnarray}
+
+In case of "D50":
+
+\begin{eqnarray}
+	\begin{bmatrix}	X'\\ Y' \\ Z' \end{bmatrix} 
+	&=& \begin{bmatrix} 0.4360747 &  0.3850649 &  0.1430804 \\  0.2225045 & 0.7168786 & 0.0606169 \\ 0.0139322 &  0.0971045 & 0.7141733 \end{bmatrix} 
+	\begin{bmatrix}	R \\ G \\ B \end{bmatrix}
+	\label{eqmat1}
+\end{eqnarray}
+
+The white point:
+\begin{eqnarray}
+	\begin{bmatrix}	X_0 \\ Y_0 \\ Z_0 \end{bmatrix} 
+	&=& \begin{bmatrix} 0.4360747 &  0.3850649 &  0.1430804 \\  0.2225045 & 0.7168786 & 0.0606169 \\ 0.0139322 &  0.0971045 & 0.7141733 \end{bmatrix} 
+	\begin{bmatrix}	1 \\ 1 \\ 1 \end{bmatrix}
+	\label{eqmat1}
+\end{eqnarray}
+
+\begin{displaymath}
+	lumMin = \frac{lumMax}{C}
+\end{displaymath}
+
+The triplet ($X$,$Y$,$Z$) is:
+
+\begin{displaymath}
+	X = lumMin.X_0 + X'.(lumMax-lumMin).X_0
+\end{displaymath}
+
+\begin{displaymath}
+	Y = lumMin + Y'.(lumMax-lumMin)
+\end{displaymath}
+
+\begin{displaymath}
+	Z = lumMin.Z_0 + Z'.(lumMax-lumMin).Z_0
+\end{displaymath}
+
+\section{Module: SaveFrameRAWModule}
+
+This module saves a component in a binary file.
+
+\subsection{Parameter: "Filename"}
+
+This parameter is the path and filename of the output file without the extension ".raw".
+
+\subsection{Parameter: "ComponentToWrite"}
+
+This parameter selections the component to save. The module "SequenceRawGeneratorModule" creates a component with the index "0". The module "SRgbDisplayModule" creates a component with the index "1". The module "SaveFrameRawModule" does not create any component.
+
+Therefore if this parameter has the value "1", it will save the component of the module "SRgbDisplayModule".
+
+\subsection{Parameter: "FrameToWrite"}
+This parameter selections the frame to save. If the value is "-1" then all frames will be saved.
+
+\subsection{Parameter: "ChannelToWrite"}
+
+This parameter selections the channel to save, in case of RGB by instance, three channels can be saved. If the value is "-1" then all channels will be saved.
+
+The filename is given as input and a filename extension will automatically generated with the extension ".raw".
+
+An initialization txt file is automatically generated with the parameter to give for manipulating the raw file or open with ImageJ by instance:
+
+SequenceRawGeneratorModule:
+
+\lstset{language=Scilab}
+\begin{lstlisting}
+file name: ./output/sRGB
+width: 64
+height: 64
+type imageJ: 32-bit Unsigned
+\end{lstlisting}
+
+SRgbDisplayModule:
+
+\lstset{language=Scilab}
+\begin{lstlisting}
+file name: ./output/sRGB2XYZD50
+width: 64
+height: 64
+type imageJ: 32-bit Real
+\end{lstlisting}
+
+The filename uses the filename given as input parameter and adds the suffix "\_description\_raw" before the extension ".raw".
+
+
+
+

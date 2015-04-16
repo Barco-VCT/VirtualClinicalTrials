@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SuperXML>
+	<LIST_OF_ITERATIONS name = "pipeline" value="1">	
+	</LIST_OF_ITERATIONS>
+	
+	<LIST_OF_PARAMETERS>
+	</LIST_OF_PARAMETERS>
+
+	<TEMPLATE_MEVIC_SIMULATION>
+		<REF>
+			<SingleSliceCHOModule>
+				<reader_id dataType = "unsigned long" value = "1"/>
+				<image_height dataType = "unsigned long" value = "64"/>
+				<image_width dataType = "unsigned long" value = "64"/>
+				<image_depth dataType = "unsigned long" value = "1"/>
+				<one_image_file_per_frame dataType = "bool" value = "false"/>
+				<target_slice_id dataType = "unsigned long" value = "1"/>
+				<num_image_pairs_training dataType = "unsigned long" value = "50"/>
+				<num_image_pairs_testing dataType = "unsigned long" value = "50"/>
+				<channels_number dataType = "unsigned long" value = "15"/>	
+				<channels_type dataType = "char" value = "LG"/>
+				<channels_lg_spread dataType = "float" value = "22"/>
+				<save_channelized_images dataType = "bool" value = "false"/>
+				<auto_create_outputfolders dataType = "bool" value = "true"/>
+				<dirpath_in_training_healthy dataType = "char" value = "#1\00_displaySimulation\output\healthy\train"/>
+				<dirpath_in_training_diseased dataType = "char" value = "#1\00_displaySimulation\output\diseased\train"/>
+				<dirpath_in_testing_healthy dataType = "char" value = "#1\00_displaySimulation\output\healthy\test"/>
+				<dirpath_in_testing_diseased dataType = "char"  value = "#1\00_displaySimulation\output\diseased\test"/>
+				<dirpath_out_channelized_training_healthy dataType = "char" value = "#0"/>
+				<dirpath_out_channelized_training_diseased dataType = "char" value = "#0"/>
+				<dirpath_out_channelized_testing_healthy dataType = "char" value = "#0"/>
+				<dirpath_out_channelized_testing_diseased dataType = "char" value = "#0"/>
+				<filepath_out_training_tpf_fpf dataType = "char" value = "#0\outputTest\training_tpf_fpf.txt"/>
+				<filepath_out_training_auc_snr dataType = "char" value = "#0\outputTest\training_auc_snr.txt"/>
+				<filepath_out_testing_tpf_fpf dataType = "char" value = "#0\outputTest\testing_tpf_fpf.txt"/>
+				<filepath_out_testing_auc_snr dataType = "char" value = "#0\outputTest\testing_auc_snr.txt"/>
+			 </SingleSliceCHOModule>
+		</REF>	
+	</TEMPLATE_MEVIC_SIMULATION>
+</SuperXML>

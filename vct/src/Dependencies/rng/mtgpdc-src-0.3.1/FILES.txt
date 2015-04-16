@@ -1,0 +1,12 @@
+This archive contails following directories and files.
+
+FILES.txt:		This file.
+CHANGE-LOG.txt		change log.
+LICENSE.txt:		License file.
+src/			directory for source files.
+src/sample-data/	some result files.
+src/migration-tool/	a tool to chagne the output of old version.
+include			directory for our utilities.
+readme.html		document.
+
+

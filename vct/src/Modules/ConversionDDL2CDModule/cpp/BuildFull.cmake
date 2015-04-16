@@ -1,0 +1,10 @@
+SET(SRC_ConversionDDL2CDModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/ConversionDDL2CDModule/cpp/ConversionDDL2CDModule.cpp 
+) 
+SET(HEADER_ConversionDDL2CDModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/ConversionDDL2CDModule/ConversionDDL2CDModule.h 
+) 
+SET(FILES_MODULES_ConversionDDL2CDModule 
+${SRC_ConversionDDL2CDModule} 
+${HEADER_ConversionDDL2CDModule} 
+) 

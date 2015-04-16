@@ -1,0 +1,5 @@
+width=height=64
+RGB 24bits
+littleEndian
+
+grayscale gradient with colored noise

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SuperXML>
+	<LIST_OF_ITERATIONS name = "pipeline" value="1">	
+	</LIST_OF_ITERATIONS>
+	
+	<LIST_OF_PARAMETERS>
+	</LIST_OF_PARAMETERS>
+
+	<TEMPLATE_MEVIC_SIMULATION>
+		<REF>
+			<SingleSliceCHOModule>
+				<reader_id dataType = "unsigned long" value = "1"/>
+				<image_height dataType = "unsigned long" value = "64"/>
+				<image_width dataType = "unsigned long" value = "64"/>
+				<image_depth dataType = "unsigned long" value = "1"/>
+				<one_image_file_per_frame dataType = "bool" value = "false"/>
+				<target_slice_id dataType = "unsigned long" value = "1"/>
+				<num_image_pairs_training dataType = "unsigned long" value = "16"/>
+				<num_image_pairs_testing dataType = "unsigned long" value = "16"/>
+				<channels_number dataType = "unsigned long" value = "15"/>	
+				<channels_type dataType = "char" value = "LG"/>
+				<channels_lg_spread dataType = "float" value = "22"/>
+				<save_channelized_images dataType = "bool" value = "false"/>
+				<auto_create_outputfolders dataType = "bool" value = "true"/>
+				<dirpath_in_training_healthy dataType = "char" value = "#0\input\healthy\train1"/>
+				<dirpath_in_training_diseased dataType = "char" value = "#0\input\diseased\train1"/>
+				<dirpath_in_testing_healthy dataType = "char" value = "#0\input\healthy\test"/>
+				<dirpath_in_testing_diseased dataType = "char"  value = "#0\input\diseased\test"/>
+				<dirpath_out_channelized_training_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_training_diseased dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_diseased dataType = "char" value = ""/>
+				<filepath_out_training_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\training\reader_01_training_tpf_fpf.txt"/>
+				<filepath_out_training_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\training\reader_01_training_auc_snr.txt"/>
+				<filepath_out_testing_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\testing\reader_01_testing_tpf_fpf.txt"/>
+				<filepath_out_testing_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\testing\reader_01_testing_auc_snr.txt"/>
+				<filepath_out_reader_score_healthy_ref dataType = "char" value = "#0\output_temp\scores\reader_00_scores_healthy.txt"/>
+				<filepath_out_reader_score_healthy_new dataType = "char" value = "#0\output_temp\scores\reader_01_scores_healthy.txt"/>
+				<filepath_out_reader_score_diseased_ref dataType = "char" value = "#0\output_temp\scores\reader_00_scores_diseased.txt"/>
+				<filepath_out_reader_score_diseased_new dataType = "char" value = "#0\output_temp\scores\reader_01_scores_diseased.txt"/>
+			 </SingleSliceCHOModule>
+			 <SingleSliceCHOModule>
+				<reader_id dataType = "unsigned long" value = "2"/>
+				<image_height dataType = "unsigned long" value = "64"/>
+				<image_width dataType = "unsigned long" value = "64"/>
+				<image_depth dataType = "unsigned long" value = "1"/>
+				<one_image_file_per_frame dataType = "bool" value = "false"/>
+				<target_slice_id dataType = "unsigned long" value = "1"/>
+				<num_image_pairs_training dataType = "unsigned long" value = "16"/>
+				<num_image_pairs_testing dataType = "unsigned long" value = "16"/>
+				<channels_number dataType = "unsigned long" value = "15"/>	
+				<channels_type dataType = "char" value = "LG"/>
+				<channels_lg_spread dataType = "float" value = "22"/>
+				<save_channelized_images dataType = "bool" value = "false"/>
+				<auto_create_outputfolders dataType = "bool" value = "true"/>
+				<dirpath_in_training_healthy dataType = "char" value = "#0\input\healthy\train2"/>
+				<dirpath_in_training_diseased dataType = "char" value = "#0\input\diseased\train2"/>
+				<dirpath_in_testing_healthy dataType = "char" value = "#0\input\healthy\test"/>
+				<dirpath_in_testing_diseased dataType = "char"  value = "#0\input\diseased\test"/>
+				<dirpath_out_channelized_training_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_training_diseased dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_diseased dataType = "char" value = ""/>
+				<filepath_out_training_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\training\reader_02_training_tpf_fpf.txt"/>
+				<filepath_out_training_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\training\reader_02_training_auc_snr.txt"/>
+				<filepath_out_testing_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\testing\reader_02_testing_tpf_fpf.txt"/>
+				<filepath_out_testing_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\testing\reader_02_testing_auc_snr.txt"/>
+				<filepath_out_reader_score_healthy_ref dataType = "char" value = "#0\output_temp\scores\reader_01_scores_healthy.txt"/>
+				<filepath_out_reader_score_healthy_new dataType = "char" value = "#0\output_temp\scores\reader_02_scores_healthy.txt"/>
+				<filepath_out_reader_score_diseased_ref dataType = "char" value = "#0\output_temp\scores\reader_01_scores_diseased.txt"/>
+				<filepath_out_reader_score_diseased_new dataType = "char" value = "#0\output_temp\scores\reader_02_scores_diseased.txt"/>
+			 </SingleSliceCHOModule>
+			 <SingleSliceCHOModule>
+				<reader_id dataType = "unsigned long" value = "3"/>
+				<image_height dataType = "unsigned long" value = "64"/>
+				<image_width dataType = "unsigned long" value = "64"/>
+				<image_depth dataType = "unsigned long" value = "1"/>
+				<one_image_file_per_frame dataType = "bool" value = "false"/>
+				<target_slice_id dataType = "unsigned long" value = "1"/>
+				<num_image_pairs_training dataType = "unsigned long" value = "16"/>
+				<num_image_pairs_testing dataType = "unsigned long" value = "16"/>
+				<channels_number dataType = "unsigned long" value = "15"/>	
+				<channels_type dataType = "char" value = "LG"/>
+				<channels_lg_spread dataType = "float" value = "22"/>
+				<save_channelized_images dataType = "bool" value = "false"/>
+				<auto_create_outputfolders dataType = "bool" value = "true"/>
+				<dirpath_in_training_healthy dataType = "char" value = "#0\input\healthy\train3"/>
+				<dirpath_in_training_diseased dataType = "char" value = "#0\input\diseased\train3"/>
+				<dirpath_in_testing_healthy dataType = "char" value = "#0\input\healthy\test"/>
+				<dirpath_in_testing_diseased dataType = "char"  value = "#0\input\diseased\test"/>
+				<dirpath_out_channelized_training_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_training_diseased dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_diseased dataType = "char" value = ""/>
+				<filepath_out_training_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\training\reader_03_training_tpf_fpf.txt"/>
+				<filepath_out_training_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\training\reader_03_training_auc_snr.txt"/>
+				<filepath_out_testing_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\testing\reader_03_testing_tpf_fpf.txt"/>
+				<filepath_out_testing_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\testing\reader_03_testing_auc_snr.txt"/>
+				<filepath_out_reader_score_healthy_ref dataType = "char" value = "#0\output_temp\scores\reader_02_scores_healthy.txt"/>
+				<filepath_out_reader_score_healthy_new dataType = "char" value = "#0\output_temp\scores\reader_03_scores_healthy.txt"/>
+				<filepath_out_reader_score_diseased_ref dataType = "char" value = "#0\output_temp\scores\reader_02_scores_diseased.txt"/>
+				<filepath_out_reader_score_diseased_new dataType = "char" value = "#0\output_temp\scores\reader_03_scores_diseased.txt"/>
+			 </SingleSliceCHOModule>
+			 <SingleSliceCHOModule>
+				<reader_id dataType = "unsigned long" value = "4"/>
+				<image_height dataType = "unsigned long" value = "64"/>
+				<image_width dataType = "unsigned long" value = "64"/>
+				<image_depth dataType = "unsigned long" value = "1"/>
+				<one_image_file_per_frame dataType = "bool" value = "false"/>
+				<target_slice_id dataType = "unsigned long" value = "1"/>
+				<num_image_pairs_training dataType = "unsigned long" value = "16"/>
+				<num_image_pairs_testing dataType = "unsigned long" value = "16"/>
+				<channels_number dataType = "unsigned long" value = "15"/>	
+				<channels_type dataType = "char" value = "LG"/>
+				<channels_lg_spread dataType = "float" value = "22"/>
+				<save_channelized_images dataType = "bool" value = "false"/>
+				<auto_create_outputfolders dataType = "bool" value = "true"/>
+				<dirpath_in_training_healthy dataType = "char" value = "#0\input\healthy\train4"/>
+				<dirpath_in_training_diseased dataType = "char" value = "#0\input\diseased\train4"/>
+				<dirpath_in_testing_healthy dataType = "char" value = "#0\input\healthy\test"/>
+				<dirpath_in_testing_diseased dataType = "char"  value = "#0\input\diseased\test"/>
+				<dirpath_out_channelized_training_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_training_diseased dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_diseased dataType = "char" value = ""/>
+				<filepath_out_training_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\training\reader_04_training_tpf_fpf.txt"/>
+				<filepath_out_training_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\training\reader_04_training_auc_snr.txt"/>
+				<filepath_out_testing_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\testing\reader_04_testing_tpf_fpf.txt"/>
+				<filepath_out_testing_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\testing\reader_04_testing_auc_snr.txt"/>
+				<filepath_out_reader_score_healthy_ref dataType = "char" value = "#0\output_temp\scores\reader_03_scores_healthy.txt"/>
+				<filepath_out_reader_score_healthy_new dataType = "char" value = "#0\output_temp\scores\reader_04_scores_healthy.txt"/>
+				<filepath_out_reader_score_diseased_ref dataType = "char" value = "#0\output_temp\scores\reader_03_scores_diseased.txt"/>
+				<filepath_out_reader_score_diseased_new dataType = "char" value = "#0\output_temp\scores\reader_04_scores_diseased.txt"/>
+			 </SingleSliceCHOModule>
+			 <SingleSliceCHOModule>
+				<reader_id dataType = "unsigned long" value = "5"/>
+				<image_height dataType = "unsigned long" value = "64"/>
+				<image_width dataType = "unsigned long" value = "64"/>
+				<image_depth dataType = "unsigned long" value = "1"/>
+				<one_image_file_per_frame dataType = "bool" value = "false"/>
+				<target_slice_id dataType = "unsigned long" value = "1"/>
+				<num_image_pairs_training dataType = "unsigned long" value = "16"/>
+				<num_image_pairs_testing dataType = "unsigned long" value = "16"/>
+				<channels_number dataType = "unsigned long" value = "15"/>	
+				<channels_type dataType = "char" value = "LG"/>
+				<channels_lg_spread dataType = "float" value = "22"/>
+				<save_channelized_images dataType = "bool" value = "false"/>
+				<auto_create_outputfolders dataType = "bool" value = "true"/>
+				<dirpath_in_training_healthy dataType = "char" value = "#0\input\healthy\train5"/>
+				<dirpath_in_training_diseased dataType = "char" value = "#0\input\diseased\train5"/>
+				<dirpath_in_testing_healthy dataType = "char" value = "#0\input\healthy\test"/>
+				<dirpath_in_testing_diseased dataType = "char"  value = "#0\input\diseased\test"/>
+				<dirpath_out_channelized_training_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_training_diseased dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_healthy dataType = "char" value = ""/>
+				<dirpath_out_channelized_testing_diseased dataType = "char" value = ""/>
+				<filepath_out_training_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\training\reader_05_training_tpf_fpf.txt"/>
+				<filepath_out_training_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\training\reader_05_training_auc_snr.txt"/>
+				<filepath_out_testing_tpf_fpf dataType = "char" value = "#0\output_temp\tpf_fpf\testing\reader_05_testing_tpf_fpf.txt"/>
+				<filepath_out_testing_auc_snr dataType = "char" value = "#0\output_temp\auc_snr\testing\reader_05_testing_auc_snr.txt"/>
+				<filepath_out_reader_score_healthy_ref dataType = "char" value = "#0\output_temp\scores\reader_04_scores_healthy.txt"/>
+				<filepath_out_reader_score_healthy_new dataType = "char" value = "#0\output_temp\scores\reader_05_scores_healthy.txt"/>
+				<filepath_out_reader_score_diseased_ref dataType = "char" value = "#0\output_temp\scores\reader_04_scores_diseased.txt"/>
+				<filepath_out_reader_score_diseased_new dataType = "char" value = "#0\output_temp\scores\reader_05_scores_diseased.txt"/>
+			 </SingleSliceCHOModule>
+			<MRMCModule>
+				<file_path_scores_diseased dataType = "char" value = "#0\output_temp\scores\reader_05_scores_diseased.txt"/>
+				<file_path_scores_healthy dataType = "char" value = "#0\output_temp\scores\reader_05_scores_healthy.txt"/>
+				<file_path_results dataType = "char" value = "#0\outputTest\shot1result_LG_multi.txt"/>
+				<flag_estimate_biased dataType = "int" value = "0"/>
+				<flag_verbose_required dataType = "int" value = "1"/>
+			</MRMCModule>
+		</REF>	
+	</TEMPLATE_MEVIC_SIMULATION>
+</SuperXML>

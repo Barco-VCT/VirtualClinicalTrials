@@ -1,0 +1,80 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Latex Style defined in bookMEVIC.cls
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[12pt,english]{../files/bookVCT}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% latex packages defined in usepackageVCT.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{../files/usepackageVCT.tex}
+
+%% Uncomment the next line if you want to use glossaries and/or acronyms
+
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% First page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setlength{\parskip}{0cm}
+\setlength{\parskip}{.2cm}
+\thispagestyle{empty}
+\input{./first/first.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Page numbering style
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\cleardoublepage
+\pagenumbering{roman}
+\setcounter{page}{1} \cleardoublepage
+\dominitoc 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Short table of contents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\shorttableofcontents{Short contents}{3}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Chapters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\cleardoublepage
+\clearpage \pagenumbering{arabic}
+\input{./00_introduction/introduction.tex}
+\input{./01_Apply3x1DLutModule/Apply3x1DLutModule.tex}
+\input{./02_SRgbDisplayModule/SRgbDisplayModule.tex}
+\input{./03_Rgb2XYZDisplayModule/Rgb2XYZDisplayModule.tex}
+\input{./04_DeltaE2000Module/DeltaE2000Module.tex}
+\input{./05_ClinicalStudy/ClinicalStudy.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Table of figures
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\pagestyle{headings}
+\newpage
+\cleardoublepage
+\lhead[\fancyplain{}{\bfseries\thepage}]{\fancyplain{}{\bfseries}}
+\addcontentsline{toc}{chapter}{Figure list} \listoffigures
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Table of contents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\cleardoublepage
+\lhead[\fancyplain{}{\bfseries\thepage}]{\fancyplain{}{\bfseries}}
+\addcontentsline{toc}{chapter}{Contents} \tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliography
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\normalsize{}
+\cleardoublepage
+\lhead[\fancyplain{}{\bfseries\thepage}]{\fancyplain{}{\bfseries}}
+\bibliographystyle{../files/alphaVCT}
+\bibliography{../files/biblio}
+
+
+\printglossaries
+
+\end{document}

@@ -1,0 +1,4 @@
+file name: d:/Barco/BackedUp/Files/projects/funded_projects/vct_nih/software/vct_branch_opensrc/test_units/test_SRgbDisplayModule/output/sRGB
+width: 64
+height: 64
+type imageJ: 32-bit Unsigned

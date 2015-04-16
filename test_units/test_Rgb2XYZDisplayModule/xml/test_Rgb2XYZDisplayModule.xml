@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SuperXML>
+	<LIST_OF_ITERATIONS name = "pipeline" value="1">	
+	</LIST_OF_ITERATIONS>
+	
+	<LIST_OF_PARAMETERS>
+		<LocalParameter name = "REF">
+			<SequenceRawGeneratorModule name="directory" value = "#0\input"/>
+		</LocalParameter>				
+	</LIST_OF_PARAMETERS>
+
+	<TEMPLATE_MEVIC_SIMULATION>
+		<REF>
+			<SequenceRawGeneratorModule>
+				<directory dataType="char" value = "$"/>
+				<number_of_slices dataType="int" value = "1"/>
+				<width dataType = "int" value = "64"/>
+				<height dataType = "int" value = "64"/>
+				<nbBitsRange dataType = "int" value = "8"/>
+				<_0bigEndian_1littleEndian dataType = "int" value = "0"/>
+				<nbBitsOutput dataType = "int" value = "8"/>
+				<nbBitsPrecision dataType = "int" value = "24"/>
+				<_1WhiteIs0_0Otherwise dataType = "int" value = "0"/>
+				<frame_repeat dataType = "int" value = "1"/>
+				<_1RGB_0GRAY dataType = "int" value = "1"/>			
+			</SequenceRawGeneratorModule>
+
+			<DisplayModule>
+				<_1Color_0Monochrome dataType="int" value="1"/>
+				<filenameNativeCurveGray dataType="char" value = "#0\input\gray.csv"/>
+				<filenameNativeCurveRed dataType="char" value = "#0\input\red.csv"/>
+				<filenameNativeCurveGreen dataType="char" value = "#0\input\green.csv"/>
+				<filenameNativeCurveBlue dataType="char" value = "#0\input\blue.csv"/>
+				<filenameNativeCurveCyan dataType="char" value = "#0\input\cyan.csv"/>
+				<filenameNativeCurveMagenta dataType="char" value = "#0\input\magenta.csv"/>
+				<filenameNativeCurveYellow dataType="char" value = "#0\input\yellow.csv"/>
+				<nbBits dataType="int" value="8"/>
+				<frequency dataType="int" value="50"/>	
+			</DisplayModule>	
+			
+			<Rgb2XYZDisplayModule>
+			</Rgb2XYZDisplayModule>
+					
+
+			<SaveFrameTXTModule>
+				<Filename dataType="char" value="#0\outputTest\init_txt"/>
+				<ComponentToWrite dataType="int" value="0"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameTXTModule>	
+		
+			<SaveFrameRAWModule>
+				<Filename dataType="char" value="#0\outputTest\init_raw"/>
+				<ComponentToWrite dataType="int" value="0"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameRAWModule>		
+			
+			<SaveFrameTXTModule>
+				<Filename dataType="char" value="#0\outputTest\txt"/>
+				<ComponentToWrite dataType="int" value="1"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameTXTModule>	
+		
+			<SaveFrameRAWModule>
+				<Filename dataType="char" value="#0\outputTest\raw"/>
+				<ComponentToWrite dataType="int" value="1"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameRAWModule>		
+		</REF>	
+	</TEMPLATE_MEVIC_SIMULATION>
+</SuperXML>
+	

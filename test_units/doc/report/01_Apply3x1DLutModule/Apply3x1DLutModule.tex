@@ -1,0 +1,252 @@
+\chapter{Simulation: applying 1D LUTs to RGB input}
+\minitoc{}
+
+\section{Introduction}
+
+This simulation aims to load an RGB image or sequence as input and then apply 1D LUTs one per channel (R,G,B).
+
+The output is saved in raw and in txt files.
+
+\section{Input}
+
+\subsection{Input image}
+
+The input image is a 24 bit RGB image saved in a raw file (64x64pixels stored as 24bit RGB).
+
+To open it with ImageJ by instance, use "import raw file" with the following options:
+\begin{itemize}
+\item Image type: 24-bit RGB
+\item Width: 64 pixels
+\item Height: 64 pixels
+\item Offset to first image: 0 bytes
+\item Number of images: 1
+\item Gap between images: 0
+\item White is not zero
+\item Little-endian byte order
+\item Not open all files in folder
+\item Not use virtual stack
+\end{itemize}
+
+The input image is a grayscale gradient is shown in the figure \ref{fig:gradientRGB}.
+
+\begin{figure}[!htb]
+\begin{center}
+\includegraphics[width=0.5\columnwidth]{./01_Apply3x1DLutModule/images/24RGBL.png}
+\caption{Input grayscale gradient image.}\label{fig:gradientRGB}
+\end{center}
+\end{figure}
+
+\subsection{Input LUTs}
+
+Three input 1D LUTs are given to the simulation. They are simply text files with 256 lines and 2 columns. The first column corresponds to the Digital Driving Level and the second level is the LUT value normalized between 0 and 1 like:
+
+\lstset{language=Scilab}
+\begin{lstlisting}
+0	0
+1	0.003921569
+2	0.007843137
+3	0.011764706
+4	0.015686275
+5	0.019607843
+6	0.023529412
+...
+...
+248	0.97254902
+249	0.976470588
+250	0.980392157
+251	0.984313725
+252	0.988235294
+253	0.992156863
+254	0.996078431
+255	1
+\end{lstlisting}
+
+There are three 1D LUTs:
+\begin{itemize}
+\item Red: "lut\_red.txt
+\item Green: "lut\_green.txt"
+\item Blue: "lut\_blue.txt"
+\end{itemize}
+
+\section{Command}
+
+For running the simulation, the following command is needed:
+
+\lstset{language=C++}
+\begin{lstlisting}
+"..\vct\VCT.exe" SuperXML ".\xml\test_Apply3x1DLutModule.xml" "."
+\end{lstlisting}
+
+The first argument is the path to the VCT executable. The second argument is simply the key word "SuperXML" and the third one is the path to the xml file. Any additional parameters are used within the xml file, in this case, it corresponds to an input path.
+
+\section{xml}
+
+The input xml file is:
+
+\lstset{language=XML}
+\begin{lstlisting}
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SuperXML>
+	<LIST_OF_ITERATIONS name = "pipeline" value="1">	
+	</LIST_OF_ITERATIONS>
+	
+	<LIST_OF_PARAMETERS>
+		<LocalParameter name = "REF">
+			<SequenceRawGeneratorModule name="directory" value = "#0\input\"/>
+			<Apply3x1DLutModule name="filenamePathLutRed" value = "#0\input\lut_red.txt"/>
+			<Apply3x1DLutModule name="filenamePathLutGreen" value = "#0\input\lut_green.txt"/>
+			<Apply3x1DLutModule name="filenamePathLutBlue" value = "#0\input\lut_blue.txt"/>
+		</LocalParameter>				
+	</LIST_OF_PARAMETERS>
+
+	<TEMPLATE_MEVIC_SIMULATION>
+		<REF>
+			<SequenceRawGeneratorModule>
+				<directory dataType="char" value = "$"/>
+				<number_of_slices dataType="int" value = "1"/>
+				<width dataType = "int" value = "64"/>
+				<height dataType = "int" value = "64"/>
+				<nbBitsRange dataType = "int" value = "8"/>
+				<_0bigEndian_1littleEndian dataType = "int" value = "0"/>
+				<nbBitsOutput dataType = "int" value = "8"/>
+				<nbBitsPrecision dataType = "int" value = "24"/>
+				<_1WhiteIs0_0Otherwise dataType = "int" value = "0"/>
+				<frame_repeat dataType = "int" value = "1"/>
+				<_1RGB_0GRAY dataType = "int" value = "1"/>			
+			</SequenceRawGeneratorModule>
+			<Apply3x1DLutModule>
+				<filenamePathLutRed dataType="string" value="$"/>
+				<filenamePathLutGreen dataType="string" value="$"/>
+				<filenamePathLutBlue dataType="string" value="$"/>
+				<nbBits dataType="unsigned int" value="8"/>
+			</Apply3x1DLutModule>		
+			<SaveFrameRAWModule>
+				<Filename dataType="char" value="#0\output\RGBLUT"/>
+				<ComponentToWrite dataType="int" value="1"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameRAWModule>
+			<SaveFrameTXTModule>
+				<Filename dataType="char" value="#0\output\RGBIN"/>
+				<ComponentToWrite dataType="int" value="0"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameTXTModule>	
+			<SaveFrameTXTModule>
+				<Filename dataType="char" value="#0\output\RGBLUT"/>
+				<ComponentToWrite dataType="int" value="1"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameTXTModule>			
+		</REF>	
+	</TEMPLATE_MEVIC_SIMULATION>
+</SuperXML>
+\end{lstlisting}
+
+For the module "SequenceRawGeneratorModule", the character sequence "$\#0$" is replaced by the additional input argument given at the execution of the program. 
+
+\section{Output}
+
+The output is a an image or a sequence or RGB frames.
+
+\section{Module: SequenceRawGeneratorModule}
+
+\subsection{Parameter: "directory"}
+
+This module is used for loading an image or a sequence of images. The first parameter of this module corresponds to a path of a directory. If the directory has more than one file with the extension "raw", the module will open directly the files with the raw extension depending on the following parameter: "number\_of\_slices".
+
+\subsection{Parameter: "number\_of\_slices"}
+
+If this parameter is equal to "1" then only one image is opened.
+
+\subsection{Parameter: image-sequence}
+
+The parameters from "" to "" correspond to the image or the sequence.
+
+\subsection{Parameter: "frame\_repeat"}
+
+In order to generate a sequence of frames for the display simulation, this parameter can be used. If this parameter is equal to 1, one slice from the input sequence corresponds to 1 frame in the simulation. In order to repeat each slice this parameter can be used with a value superior to 1. This frame repeat parameter can be in float like described in \cite{Mar12} in order to simulate a browsing speed that is not an integer.
+
+Let $F_{browse}$ show the slice browsing speed, F$_{refresh}$ show the frame refresh rate (a display property in $Hz$), and $FR$ show frame repeat. $F_{browse}$ = $\frac{F_{refresh}}{F}$. For example, at $F_{refresh}$ of $50$ frame per second ($fps$), if each slice is fed twice to the display at consecutive refreshes ($FR = 2$), the apparent slice browsing speed is $\frac{50}{2} = 25$ slice per second ($sps$). In other words, $FR = \frac{F_{refresh}}{F_{browse}} = \frac{50}{25} = 2$. Hence, the browsing speeds that can be simulated with integer FRs are very limited. By allowing a fractional frame repeat, one can have arbitrary browsing speeds as follows. As an example, $F_{browse}$ of $40$ $sps$ can be achieved if we make $5$ frames out of every $4$ slices. In this case $FR = \frac{F_{refresh}}{F_{browse}} = \frac{50}{40} = \frac{5}{4}$. To that end, we use an error accumulation method to find out which slices should be repeated: starting from the beginning of the stack (the residue is initially set to zero), each slice is copied floor(FR+residue) times, generating that many frames, and the residue is updated to $FR+residue-floor(FR+residue)$. This way, when the residue goes above one, an extra frame with a copy of the current slice is inserted. To have a slice browsing speed of $40$ $sps$, on a 41-slice stack (comprised of slices $1$, $2$, \ldots{}, $41$), when $F_{refresh}$ is $50$ $fps$, the following slices are written to the frame buffer: $1$ $2$ $3$ $4$ $4$ $5$ $6$ $7$ $8$ $8$ $9$ $10$ $11$ $12$ $12$ $13$ $14$ $15$ $16$ $16$ $17$ $18$ $19$ $20$ $20$ $21$ $22$ $23$ $24$ $24$ $25$ $26$ $27$ $28$ $28$ $29$ $30$ $31$ $32$ $32$ $33$ $34$ $35$ $36$ $36$ $37$ $38$ $39$ $40$ $40$ $41$. In this example, slice $n$ is copied twice if $mod(n, 4) = 0$, and all other slices are copied only once.
+
+\section{Module: "Apply3x1DLutModule"}
+
+\subsection{Parameter: "filenamepathLutRed"}
+
+Path and filename of the input text file of the 1D Red Lut.
+
+\subsection{Parameter: "filenamepathLutGreen"}
+
+Path and filename of the input text file of the 1D Green Lut.
+
+\subsection{Parameter: "filenamepathLutBlue"}
+
+Path and filename of the input text file of the 1D Blue Lut.
+
+\section{Module: SaveFrameRAWModule}
+
+This module saves a component in a binary file.
+
+\subsection{Parameter: "Filename"}
+
+This parameter is the path and filename of the output file without the extension ".raw".
+
+\subsection{Parameter: "ComponentToWrite"}
+
+This parameter selections the component to save. The module "SequenceRawGeneratorModule" creates a component with the index "0". The module "Apply3x1DLutModule" creates a component with the index "1". The module "SaveFrameRawModule" does not create any component.
+
+Therefore if this parameter has the value "1", it will save the component of the module "Apply3x1DLutModule".
+
+\subsection{Parameter: "FrameToWrite"}
+This parameter selections the frame to save. If the value is "-1" then all frames will be saved.
+
+\subsection{Parameter: "ChannelToWrite"}
+
+This parameter selections the channel to save, in case of RGB by instance, three channels can be saved. If the value is "-1" then all channels will be saved.
+
+The filename is given as input and a filename extension will automatically generated with the extension ".raw".
+
+An initialization txt file is automatically generated with the parameter to give for manipulating the raw file or open with ImageJ by instance:
+
+\lstset{language=Scilab}
+\begin{lstlisting}
+file name: ./output/RGBLUT
+width: 64
+height: 64
+type imageJ: 32-bit Unsigned
+\end{lstlisting}
+
+The filename uses the filename given as input parameter and adds the suffix "\_description\_raw" before the extension ".raw".
+
+
+
+\section{Module: SaveFrameTXTModule}
+
+This module saves a component in a txt file.
+
+\subsection{Parameter: "Filename"}
+
+This parameter is the path and filename of the output file without the extension ".txt". The extension is automatically generated.
+
+\subsection{Parameter: "ComponentToWrite"}
+
+This parameter selections the component to save. The module "SequenceRawGeneratorModule" creates a component with the index "0". The module "Apply3x1DLutModule" creates a component with the index "1". The module "SaveFrameTxtModule" does not create any component.
+
+Therefore if this parameter has the value "1", it will save the component of the module "Apply3x1DLutModule".
+
+\subsection{Parameter: "FrameToWrite"}
+This parameter selections the frame to save. If the value is "-1" then all frames will be saved.
+
+\subsection{Parameter: "ChannelToWrite"}
+
+This parameter selections the channel to save, in case of RGB by instance, three channels can be saved. If the value is "-1" then all channels will be saved.
+
+The filename is given as input and an extension will be automatically generated with the extension ".txt".
+
+The generated file can be simply edited or imported as "txt image" with ImageJ. 
+
+
+
+
+
+

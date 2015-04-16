@@ -1,0 +1,4 @@
+file name: ./outputTest/raw
+width: 64
+height: 64
+type imageJ: 32-bit Real

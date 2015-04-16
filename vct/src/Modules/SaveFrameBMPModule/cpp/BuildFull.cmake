@@ -1,0 +1,10 @@
+SET(SRC_SaveFrameBMPModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SaveFrameBMPModule/cpp/SaveFrameBMPModule.cpp 
+) 
+SET(HEADER_SaveFrameBMPModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SaveFrameBMPModule/SaveFrameBMPModule.h 
+) 
+SET(FILES_MODULES_SaveFrameBMPModule 
+${SRC_SaveFrameBMPModule} 
+${HEADER_SaveFrameBMPModule} 
+) 

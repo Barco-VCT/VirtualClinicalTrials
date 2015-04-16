@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta name="keywords" content="Mersenne Twister,MTGP,GPGPU" />
+    <title>Mersenne Twister for Graphic Processors (MTGP)
+      Dynamic Creator (DC)</title>
+    <style type="text/css">
+      TABLE.numeric TD {text-align:right}
+      DD.gray {color:gray}
+    </style>
+  </head>
+  <body>
+    <h2>Mersenne Twister for Graphic Processors (MTGP) Dynamic Creator (DC)</h2>
+    <h2>READ ME FIRST</h2>
+
+    <p>
+      The program in this archive is Mersenne Twister for Graphic Processors
+      Dynamic Creator (MTGPDC).</p>
+    <ul>
+      <li>MTGPDC is written in C++ language using templates.</li>
+      <li>MTGPDC outputs parameter sets for MTGP in Comma Separated
+	Values format.</li>
+      <li>MTGPDC runs on CPUs not on GPUs.</li>
+    </ul>
+
+    <h2>Requirement</h2>
+    <p>MTGP requires three libraries to be compiled.</p>
+    <ul>
+      <li>Victor Shoup's <a href="http://shoup.net/ntl/">
+	  NTL: A Library for doing Number Theory</a>.</li>
+      <li><a href="http://www.boost.org/">C++ TR1 Libraries</a>.
+	(g++ ver. 4.0 or later)</li>
+      <li><a href="http://www.boost.org/">Boost C++ Libraries</a>.</li>
+      <li><a href="http://www.openssl.org/">OpenSSL</a>.</li>
+    </ul>
+    <p>And MTGP requires UNIX like Operating System with GNU C++ compiler(g++).
+    </p>
+
+    <h2>Compile</h2>
+    <ol>
+      <li>change directory to <strong>src</strong>.</li>
+      <li>edit Makefile and uncomment some lines.</li>
+      <li>type <strong>make all</strong>.</li>
+      <li>mtgp32dc and mtgp64dc are created.</li>
+    </ol>
+
+    <ol>
+      <li>change directory to <strong>src/migration-tools</strong>.</li>
+      <li>edit Makefile and uncomment some lines.</li>
+      <li>type <strong>make all</strong>.</li>
+      <li>migration32 is created.</li>
+    </ol>
+
+    <h2>Programs and Usage</h2>
+    <dl>
+      <dt>
+	mtgp32dc [-v] [-c count] [-s seed_string] [-f outputfile] mexp ID<br/>
+	mtgp64dc [-v] [-c count] [-s seed_string] [-f outputfile] mexp ID
+      </dt>
+      <dd>The programs generate parameter sets for MTGP32 or MTGP64.
+	<ul>
+	  <li>required<br/>
+	    <dl>
+	      <dt>mexp</dt>
+	      <dd>mexp is one of 3217, 4423, 11213, 23209 and 44497.</dd>
+	      <dd class="gray">mexp 110503 and 216091 are allowed now,
+		but it takes too many time to calculate these
+		parameters. And these large mexps use large internal
+		state which may not be kept in the shared memories of
+		GPUs. And searching these large mexps is not
+		tested. But someone may need these large mexps. Use
+		these large mexps at your own risk.</dd>
+	      <dt>ID</dt>
+	      <dd>ID is a decimal integer such that
+		0 &lt;= ID &lt; 2<sup>32</sup>.</dd>
+	    </dl>
+	  </li>
+	  <li>optional<br/>
+	    <dl>
+	      <dt>-v</dt>
+	      <dd>verbose mode. MTGP outputs parameters, calculation time, etc.
+		The messages are sent to standard output.</dd>
+	      <dt>-c count</dt>
+	      <dd>count is a number of the parameter sets to output.
+		If omitted, one is assumed. ID is automatically incremented.
+	      </dd>
+	      <dt>-s seed_string</dt>
+	      <dd>seed_string is a ASCII character string used to initialize
+		the internal random number generator. If omitted, PID and clock
+		are concatenated and used as seed_string.</dd>
+	      <dt>-f filename</dt>
+	      <dd>filename of output parameters. If omitted, the parameters are
+		sent to standard output.</dd>
+	    </dl>
+	  </li>
+	</ul>
+      </dd>
+      <dt>check-sha-uniq.sh file file ...</dt>
+      <dd>The program checks if SHA1 of each parameter sets is different.
+	The program uses UNIX utilities <strong>grep</strong>,
+	<strong>cut</strong>, <strong>sort</strong> and <strong>wc</strong>.
+	It outputs the number of unique SHA1s in the files which is outputs
+	of mtgp32dc or mtgp64dc.
+	<ul>
+	  <li>required<br/>
+	    <dl>
+	      <dt>file</dt>
+	      <dd>outputs of mtgp32dc or mtgp64dc</dd>
+	    </dl>
+	  </li>
+	</ul>
+      </dd>
+      <dt>fast-param.awk file file ...</dt>
+      <dd>The program converts the output of mtgp32dc or mtgp64dc
+      to the constant table of C language.</dd>
+      <dt>migration32 file</dt>
+      <dd>The program gets the output file of mtgp32dc ver.0.2 and
+      recalculates the tempering parameters using the algorithm of
+      mtgp32dc ver.0.3. The output is printed to <strong>stdout.</strong></dd>
+    </dl>
+    <p>Users may need to change <strong>check-sha-uniq.sh</strong>
+    and <strong>fast-param.awk</strong> to fit to their operating systems.</p>
+
+    <h2>Format of Outputs</h2>
+    <p>MTGP outpus Comma Separated Values format. Here is the format of outpus.
+    </p>
+    <table border="1">
+      <tr>
+	<th>Column or Row</th><th>Description</th>
+      </tr>
+      <tr>
+	<td>The first row</td>
+	<td><pre># sha1, mexp, type, id, pos, sh1, sh2, tbl_0, tbl_1,
+	tbl_2, tbl_3,tmp_0, tmp_1, tmp_2, tmp_3, mask, weight,
+	delta</pre> The first row is as above. It starts with '#', so
+	it's easy to be skipped by the script programs such
+	as <strong>fast-param.awk</strong> or
+	<strong>check-sha-uniq.sh</strong>.
+	The first row shows title of several columns, but not all columns.</td>
+      </tr>
+      <tr>
+	<td>1st column SHA1</td>
+	<td>1st column is SHA1 digest of the characteristic polynomial
+	  of the state transition function of the generator.
+	  This column start with <strong>&quot;</strong> and end with
+	  <strong>&quot;</strong>.
+	</td>
+      </tr>
+      <tr>
+	<td>2nd column MEXP</td>
+	<td>2nd column is Mersenne Exponent which is exponent part of
+	  Mersenne Prime.
+	  MTGP of the Mersenne Exponent <strong>p</strong> has a
+	  period of 2<sup>p</sup>-1.
+	</td>
+      </tr>
+      <tr>
+	<td>3rd column type</td>
+	<td>3rd column shows typename of integers in C99.
+	  mtgp32dc always puts <strong>uint32_t</strong> here,
+	  and mtgp64dc always put <strong>uint64_t</strong>.
+	</td>
+      </tr>
+      <tr>
+	<td>4th column ID</td>
+	<td>4th column shows ID which users specified directly or indirectly
+	  by command line of MTGP.
+	</td>
+      </tr>
+      <tr>
+	<td>5th column pos</td>
+	<td>5th column shows the pick-up position of the generator.
+	</td>
+      </tr>
+      <tr>
+	<td>6th and 7th columns sh1 and sh2</td>
+	<td>For mtgp32dc, sh1 and sh2 are fixed to 13 and 4 respectively.
+	  And for mtgp64dc, sh1 and sh2 are fixed to 11 and 4 respectively.
+	</td>
+      </tr>
+      <tr>
+	<td>8th -- 11th columns tbl_1 to tbl_4</td>
+	<td>recursion parameters. hexadecimal format numbers.
+	</td>
+      </tr>
+      <tr>
+	<td>12th -- 15th columns tmp_1 to tmp_4</td>
+	<td>tempering parameters. hexadecimal format numbers.
+	</td>
+      </tr>
+      <tr>
+	<td>16th column mask</td>
+	<td>the bit mask pattern.
+	  Let r = ceil(mexp / bit_size) * bit_size - mexp.
+	  r LSBs of the mask is set to zero, and other bits are set to one.
+	</td>
+      </tr>
+      <tr>
+	<td>17th column weight</td>
+	<td>Hamming weight of the characteristic polynomial.
+	  In other words, the number of non-zero term of the
+	  characteristic polynomial.
+	</td>
+      </tr>
+      <tr>
+	<td>18th column delta</td>
+	<td>Total dimension defect of the generator.
+	</td>
+      </tr>
+      <tr>
+	<td>19th to 34th columns</td>
+	<td>redundant data. the recursion parameters expanded to
+	  a look-up table.
+	</td>
+      </tr>
+      <tr>
+	<td>35th to 50th columns</td>
+	<td>redundant data. The tempering parameters expanded to
+	  a look-up table.
+	</td>
+      </tr>
+      <tr>
+	<td>51th to 66th columns</td>
+	<td>redundant data. A look-up table which has the tempering
+	  parameters shifted and or-ed
+	  with a constant for tempering and converting into float.
+	</td>
+      </tr>
+    </table>
+
+    <h2>CPU Time (sec.) consumed for searching</h2>
+    <table border="1" class="numeric">
+      <caption>CPU Time (sec.) consumed for searching
+	32bit MTGP parameter sets on OS X 10.6 MacPro Xeon 5500 2.26GHz.
+      </caption>
+      <tr>
+	<th colspan="2">MEXP</th><th>3217</th><th>4423</th>
+	<th>11213</th><th>23209</th><th>44497</th>
+      </tr>
+      <tr>
+	<th colspan="2">samples</th><td>3000</td><td>3000</td>
+	<td>1500</td><td>1500</td><td>750</td>
+      </tr>
+      <tr>
+	<th rowspan="3">Recursion parameter set search</th>
+	<th>min</th><td>0</td><td>0</td><td>4</td>
+	<td>24</td><td>143</td>
+      </tr>
+      <tr>
+	<th>max</th><td>90</td><td>191</td><td>3318</td>
+	<td>10146</td><td>49987</td>
+      </tr>
+      <tr>
+	<th>average</th><td>11.2</td><td>25.0</td><td>338.1</td>
+	<td>1404.7</td><td>6529.4</td>
+      </tr>
+      <tr>
+	<th rowspan="3">Tempering parameter set search</th>
+	<th>min</th><td>10</td><td>15</td>
+	<td>76</td><td>379</td><td>946</td>
+      </tr>
+      <tr>
+	<th>max</th><td>25</td><td>40</td><td>253</td>
+	<td>1040</td><td>3893</td>
+      </tr>
+      <tr>
+	<th>average</th><td>21.7</td><td>34.1</td>
+	<td>213.7</td><td>910.0</td><td>3236.4</td>
+      </tr>
+    </table>
+    <p>&nbsp;</p>
+    <table border="1" class="numeric">
+      <caption>CPU Time (sec.) consumed for searching
+	64bit MTGP parameter sets on CentOS 5.3 Xeon 5570 2.93GHz.</caption>
+      <tr>
+	<th colspan="2">MEXP</th><th>3217</th><th>4423</th>
+	<th>11213</th><th>23209</th><th>44497</th>
+      </tr>
+      <tr>
+	<th colspan="2">samples</th><td>1500</td><td>1500</td>
+	<td>3000</td><td>1500</td><td>750</td>
+      </tr>
+      <tr>
+	<th rowspan="3">Recursion parameter set search</th>
+	<th>min</th><td>0</td><td>0</td><td>3</td><td>15</td><td>104</td>
+      </tr>
+      <tr>
+	<th>max</th><td>42</td><td>128</td>
+	<td>1482</td><td>3187</td><td>22578</td>
+      </tr>
+      <tr>
+	<th>average</th><td>5.5</td><td>12.9</td>
+	<td>147.3</td><td>410.7</td><td>3332.8</td>
+      </tr>
+      <tr>
+	<th rowspan="3">Tempering parameter set search</th>
+	<th>min</th><td>4</td><td>7</td>
+	<td>30</td><td>102</td><td>328</td>
+      </tr>
+      <tr>
+	<th>max</th><td>10</td><td>16</td>
+	<td>85</td><td>255</td><td>864</td>
+      </tr>
+      <tr>
+	<th>average</th><td>8.5</td><td>13.1</td>
+	<td>60.1</td><td>219.4</td><td>730.8</td>
+      </tr>
+    </table>
+    <h2>LICENSE</h2>
+    <pre>
+Copyright (c) 2010 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+University. All rights reserved.
+Copyright (c) 2011 Mutsuo Saito, Makoto Matsumoto, Hiroshima
+University and University of Tokyo. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+    * Neither the name of the Hiroshima University nor the names of
+      its contributors may be used to endorse or promote products
+      derived from this software without specific prior written
+      permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    </pre>
+  </body>
+</html>

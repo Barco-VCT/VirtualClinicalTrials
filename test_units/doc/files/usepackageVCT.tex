@@ -1,0 +1,120 @@
+\usepackage[obeyspaces]{url}
+\usepackage{amsmath}
+\usepackage{babel}
+\usepackage{color}
+\usepackage[english,ruled,vlined,longend]{algorithm2e}
+\usepackage{epsfig} % for the figures and the pnd/jpg images
+\usepackage{fancyhdr}
+\usepackage[a4paper,twoside,textwidth=17cm,top=2.2cm,bottom=2.2cm]{geometry} % for the page geometry 
+\usepackage[a4paper,plainpages=false]{hyperref} % for the hyperlinks
+\usepackage[latin1]{inputenc} % for the accents: � � � �
+\usepackage{listings}
+\usepackage{minitoc} % for the short contents for each chapter
+\usepackage{shorttoc} % for the short contents
+\usepackage{times}
+\usepackage{verbatim}
+\usepackage[toc,acronym]{glossaries} % for glossaries and acronyms
+\usepackage{colortbl}
+\usepackage{subfig}
+\usepackage{amsfonts}
+\usepackage{stmaryrd}
+\usepackage{tikz}
+\usepackage{fancybox}
+\usepackage{relsize}
+\usepackage{pifont}
+\usepackage{calc}
+\usepackage{fix-cm}
+\usepackage{mdwlist}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{floatflt}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage[all]{xy}
+\usepackage{ulem}
+\usepackage{theorem}
+\usepackage{thmbox}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% To insert code in tex files
+% http://en.wikibooks.org/wiki/LaTeX/Packages/Listings
+% use command: 
+% \lstset{ %
+% language=C++ % or Matlab or XML...
+% }
+% \lstinputlisting{./appendix1b/TemporalResponseModule.cpp}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\lstset{ %
+keywordstyle=\bf \color{blue},	% choose the color of the language's keywords
+commentstyle=\color[rgb]{0.0,0.45,0.0},	% choose the color of the comments in the code
+stringstyle=\color{red},				% choose the color of the strings in the code
+identifierstyle=\bf,						% choose the style of the variable's identifiers
+basicstyle=\footnotesize,       % the size of the fonts that are used for the code
+backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+frame=none,			% adds a frame around the code
+tabsize=2,			% sets default tabsize to 2 spaces
+captionpos=b,			% sets the caption-position to bottom
+breaklines=true,		% sets automatic line breaking
+breakatwhitespace=false,	% sets if automatic breaks should only happen at whitespace
+escapeinside={\%*}{*)}          % if you want to add a comment within your code
+}  
+
+\makeatletter
+%SECTION
+\renewcommand{\thesection}{\Roman{section}}
+%SUBSECTION
+\renewcommand{\thesubsection}{\arabic{subsection}}
+%SUBSUBSECTION
+\renewcommand{\thesubsubsection}{\alph{subsubsection}}
+%integers
+\newcommand{\integer}[2]{\llbracket #1,#2 \rrbracket}
+%scalar product
+\newcommand{\scalar}[2]{#1\cdot#2}
+%norm
+\newcommand{\norm}[1]{\left\|#1\right\|}
+%functionPage
+\newcommand{\functionPagePage}[5]{\begin{array}{lrcl}
+#1: & #2 & \longrightarrow & #3 \\
+    & #4 & \longmapsto & #5 \end{array}}
+\newcommand{\vectorPage}[3]{\left(\begin{array}{l}
+#1\\
+#2\\
+#3\\
+\end{array}\right)}
+%Matrice 3,3
+\newcommand{\matrixcoeff}[9]{
+\left(
+\begin{array}{ccc}
+#1 & #4 & #7\\
+#2 & #5 & #8\\
+#3 & #6 & #9
+\end{array}
+\right)
+}
+\newcommand{\matrixvector}[3]{
+\left(
+\begin{array}{ccc}
+#1 & #2 & #3
+\end{array}
+\right)
+}
+\makeatother
+\theoremstyle{break}
+%Definition
+\newtheorem[L]{defi}{Definition}
+%Theorem
+\newtheorem[L]{theo}{Theorem}
+%Proposal
+\newtheorem[L]{prop}{Proposal}
+%Lemma
+\newtheorem[L]{lemma}{Lemma}
+%Corrolar 
+\newtheorem[L]{cor}{Corollary}[theo]
+%Application
+\newtheorem[L]{app}{Application}[theo]
+%Formula
+\newtheorem[L]{formula}{Formula}

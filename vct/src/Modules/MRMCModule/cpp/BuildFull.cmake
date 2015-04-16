@@ -1,0 +1,12 @@
+SET(SRC_MRMCModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/MRMCModule/cpp/MRMCModule.cpp 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/MRMCModule/cpp/OneShot.c 
+) 
+SET(HEADER_MRMCModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/MRMCModule/MRMCModule.h 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/MRMCModule/OneShot.h
+) 
+SET(FILES_MODULES_MRMCModule 
+${SRC_MRMCModule} 
+${HEADER_MRMCModule} 
+) 

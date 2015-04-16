@@ -1,0 +1,10 @@
+SET(SRC_WriterModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/WriterModule/cpp/WriterModule.cpp 
+) 
+SET(HEADER_WriterModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/WriterModule/WriterModule.h 
+) 
+SET(FILES_MODULES_WriterModule 
+${SRC_WriterModule} 
+${HEADER_WriterModule} 
+) 

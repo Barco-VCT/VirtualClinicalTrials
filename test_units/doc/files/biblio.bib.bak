@@ -1,0 +1,20 @@
+@INPROCEEDINGS{Tam02,
+  author = {N. Tamura and N. Tsumura and Y. Miyake},
+  title = {Masking Model for Accurate Colorimetric Characterization of LCD},
+  booktitle = {Proc. IS\&T/SID 10 th Color Imaging Conference 2002},
+  year = {2002},
+  pages = {312--316}
+}
+
+@ARTICLE{Mar08,
+  author = {C. Marchessoux and T. Kimpe and T. Bert},
+  title = {A Virtual Image Chain for Perceived and Clinical Image Quality of
+	Medical Display},
+  journal = {JOURNAL OF DISPLAY TECHNOLOGY},
+  year = {2008},
+  volume = {4},
+  pages = {356-368},
+  file = {:\\\\bvwsrv01\\mid\\00 MID-GENERAL\\02 R&D\\01 TIG\\Projects\\tig_administration\\tig_bibliography\\biblioBarco\\Mar08_biblioBarco.pdf:PDF},
+  owner = {CEMA},
+  timestamp = {2009.02.24}
+}

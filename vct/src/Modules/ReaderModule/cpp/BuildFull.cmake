@@ -1,0 +1,10 @@
+SET(SRC_ReaderModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/ReaderModule/cpp/ReaderModule.cpp 
+) 
+SET(HEADER_ReaderModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/ReaderModule/ReaderModule.h 
+) 
+SET(FILES_MODULES_ReaderModule 
+${SRC_ReaderModule} 
+${HEADER_ReaderModule} 
+) 

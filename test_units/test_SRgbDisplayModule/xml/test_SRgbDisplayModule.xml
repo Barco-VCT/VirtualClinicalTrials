@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<SuperXML>
+	<LIST_OF_ITERATIONS name = "pipeline" value="1">	
+	</LIST_OF_ITERATIONS>
+	
+	<LIST_OF_PARAMETERS>
+		<LocalParameter name = "REF">
+			<SequenceRawGeneratorModule name="directory" value = "#0\input\"/>
+		</LocalParameter>				
+	</LIST_OF_PARAMETERS>
+
+	<TEMPLATE_MEVIC_SIMULATION>
+		<REF>
+			<SequenceRawGeneratorModule>
+				<directory dataType="char" value = "$"/>
+				<number_of_slices dataType="int" value = "1"/>
+				<width dataType = "int" value = "64"/>
+				<height dataType = "int" value = "64"/>
+				<nbBitsRange dataType = "int" value = "8"/>
+				<_0bigEndian_1littleEndian dataType = "int" value = "0"/>
+				<nbBitsOutput dataType = "int" value = "8"/>
+				<nbBitsPrecision dataType = "int" value = "24"/>
+				<_1WhiteIs0_0Otherwise dataType = "int" value = "0"/>
+				<frame_repeat dataType = "int" value = "1"/>
+				<_1RGB_0GRAY dataType = "int" value = "1"/>			
+			</SequenceRawGeneratorModule>
+			<SRgbDisplayModule>
+				<gamma dataType="float" value="2.2"/>
+				<lumMax dataType="float" value="250.0"/>
+				<contrast dataType="unsigned int" value="750"/>
+				<illum dataType="string" value="D50"/>
+			</SRgbDisplayModule>
+			<SaveFrameRAWModule>
+				<Filename dataType="char" value="#0\output\sRGB"/>
+				<ComponentToWrite dataType="int" value="0"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameRAWModule>			
+			<SaveFrameRAWModule>
+				<Filename dataType="char" value="#0\output\sRGB2XYZD50"/>
+				<ComponentToWrite dataType="int" value="1"/>
+				<FrameToWrite dataType="int" value="-1"/>
+				<ChannelToWrite dataType="int" value="-1"/>
+			</SaveFrameRAWModule>			
+		</REF>	
+	</TEMPLATE_MEVIC_SIMULATION>
+</SuperXML>
+	

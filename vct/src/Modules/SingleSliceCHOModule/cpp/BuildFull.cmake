@@ -1,0 +1,10 @@
+SET(SRC_SingleSliceCHOModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SingleSliceCHOModule/cpp/SingleSliceCHOModule.cpp 
+) 
+SET(HEADER_SingleSliceCHOModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/SingleSliceCHOModule/SingleSliceCHOModule.h 
+) 
+SET(FILES_MODULES_SingleSliceCHOModule 
+${SRC_SingleSliceCHOModule} 
+${HEADER_SingleSliceCHOModule} 
+) 

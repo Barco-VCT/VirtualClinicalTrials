@@ -1,0 +1,10 @@
+SET(SRC_VideoCardModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/VideoCardModule/cpp/VideoCardModule.cpp 
+) 
+SET(HEADER_VideoCardModule 
+${CMAKE_CURRENT_SOURCE_DIR}/src/Modules/VideoCardModule/VideoCardModule.h 
+) 
+SET(FILES_MODULES_VideoCardModule 
+${SRC_VideoCardModule} 
+${HEADER_VideoCardModule} 
+) 

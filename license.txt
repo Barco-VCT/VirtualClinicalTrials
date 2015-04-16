@@ -1,0 +1,100 @@
+Barco VCT Research License
+
+
+0 “Software” shall mean VCT as originally published by Barco, as well as any subsequent  Modifications, made by Barco or a third party, to the originally published software.  
+
+1 This Software License is between you and BARCO NV, a corporation organized and existing under the laws of Belgium registered under number BE 0473.191.041, Commercial 
+Companies’ Register of Kortrijk, having its registered office President Kennedypark, 35 at B-8500 Kortrijk, Belgium ("Barco").
+
+By installing, executing, downloading, reviewing, modifying, enhancing and/or otherwise using the Software, either as initial version or as an upgrade, update, patch or 
+enhancement of a prior release, the present terms and conditions shall apply.
+
+2 Barco grants you a limited, royalty free, non-exclusive, non-assignable, non-transferable license (without the right to grant sublicenses) to:
+-	Use the Software for internal testing and/or research purposes; 
+-	Make Modifications to the Software;
+-	Use the modified Software for internal testing and/or research purposes.
+In any case, you shall refrain from using the Software for or in support of any commercial product or activity.  
+
+All modifications, derivatives, enhancements and/or alterations (the “Modifications”), and the underlying IPR related thereto will be the property of Barco, and all right, 
+title and interest therein will vest in Barco. Accordingly, Supplier hereby assigns and agrees to assign to Barco all right, title, and interest in and to the Modifications, 
+together with all underlying IPR that may be obtained on such Modifications. To the extent that title to the Modifications or related IPR may not, by operation of law, vest 
+in Barco, you hereby transfer and assign, and agree to transfer and assign, to Barco all of its rights, title and interests in and to all Modifications, including all IPR 
+related thereto. Barco will have the right to obtain and to hold in its own name all IPR at its sole discretion. You will provide, and will cause your employees, agents, 
+consultants and contractors to provide, all cooperation that Barco reasonably determines necessary to accomplish to complete transfer of the Modifications and all IPR related 
+thereto, including without limitation executing further assignments, consents, releases and other commercially reasonable documentation, and at Barco’s expense, will provide 
+and will cause any necessary third party to provide good faith testimony by affidavit, declaration, in-person or other proper means in support of any effort by Barco to 
+establish, perfect or defend its rights acquired pursuant to this Agreement through the prosecution of patents or other governmental recordings, registrations or filings, 
+and through regulatory proceedings, litigation, or other means. You further waive any “moral” rights, or other rights with respect to attribution of authorship or integrity 
+of the Modifications as you may have under any applicable law.
+
+Except in case where Barco is providing you with the source code of the (respective parts) of the Software, Neither you nor any Authorized User may, whether in whole or in 
+part, reverse engineer, derive source code from, disassemble, decompile, or create derivative works based on the Software, without the prior consent, in writing, of Barco.
+
+You warrant that the Modifications are “original” and are able to be subject to the provisions of this license. To the extent you are contemplating making “non-original” 
+Modifications, including Modifications which consist of code which is directly or indirectly subject to (i) a third party proprietary license or (ii) GPL 2, GPL 3 or any 
+other open source license which requires license that the (source code of the) Software is to be:
+-	generally disclosed or distributed in source code form, licensed for the purpose of making derivatives of such Software, or be redistributed free of charge, contrary 
+        to the terms and conditions of this Agreement; or 
+-	otherwise used or distributed in a manner contrary to the terms and conditions of this Agreement. 
+you NEED to obtain prior written approval from Barco BEFORE making such Modification.  
+
+3 Barco (and Barco's licensors, as appropriate) retain ownership of all intellectual property rights in the Software, the Modifications, and any copies you or any authorized 
+  user may make of such Software. 
+
+4 The duration of this Software License will be from the date of your acceptance (as set forth above) of the Software (with no termination date, unless otherwise specified. 
+  You may terminate this Software License at any time by destroying all copies of the Software then in your possession and returning all associated materials and documentation, 
+  to Barco. Barco may terminate this Software License forthwith by informing you at any time if you and/or any of your authorized users is in breach of any of the Software License's terms.
+
+5 YOU UNDERSTAND THAT THE SOFTWARE IS BEING PROVIDED TO YOU "AS IS". BARCO DOES NOT MAKE NOR INTENDS TO MAKE ANY WARRANTIES OR REPRESENTATIONS, EXPRESS OR IMPLIED AND 
+  SPECIFICALLY DISCLAIMS ALL IMPLIED WARRANTIES OF MERCHANTABILITY FITNESS, FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT OF INTELLECTUAL PROPERTY AND DOES NOT WARRANT 
+  THAT THE SOFTWARE WILL BE FREE FROM ERRORS OR THAT SUCH ERRORS WILL BE CORRECTED BY BARCO AND YOU ARE SOLELY RESPONSIBLE FOR ALL COSTS AND EXPENSES ASSOCIATED WITH RECTIFICATION, 
+  REPAIR OR DAMAGE CAUSED BY SUCH ERRORS.
+
+6 BARCO ACCEPTS NO LIABILITY FOR ANY DAMAGES, LOSSES OR CLAIMS YOU OR ANY THIRD PARTY MAY SUFFER AS A RESULT OF YOUR USE OF THE SOFTWARE. IN JURISDICTIONS WHERE BARCO’S 
+  LIABILITY CANNOT BE EXCLUDED, BARCO’S LIABILITY FOR DIRECT DAMAGES SHALL BE LIMITED TO AN AMOUNT OF 50 EURO IN THE AGREGATE (OR TO THE MAXIMUM EXTENT PERMITTED BY LAW 
+  WHERE NO FURTHER EXCLUSION IS LEGALLY ALLOWED). TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT WILL BARCO BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, INCIDENTAL 
+  OR CONSEQUENTIAL LOSS OR DAMAGES OF ANY KIND WHICH MAY ARISE OUT OF OR IN CONNECTION WITH THE SOFTWARE, THIS SOFTWARE LICENSE OR THE PERFORMANCE OR PURPORTED PERFORMANCE 
+  OF OR FAILURE IN THE PERFORMANCE OF BARCO’S OBLIGATIONS UNDER THIS SOFTWARE LICENSE OR FOR ANY ECONOMIC LOSS, LOSS OF BUSINESS, CONTRACTS, DATA, GOODWILL, PROFITS, 
+  TURNOVER, REVENUE, REPUTATION OR ANY LOSS ARISING FROM WORK STOPPAGE, COMPUTER FAILURE OR MALFUNCTION OF THE SOFTWARE AND ANY AND ALL OTHER COMMERCIAL DAMAGES OR LOSSES 
+  WHICH MAY ARISE IN RESPECT OF USE OF THE SOFTWARE, EVEN IF BARCO HAS BEEN ADVISED OF THE POSSIBILITY OF THEIR OCCURRENCE. 
+  YOU HEREBY AGREE TO INDEMNIFY, KEEP INDEMNIFIED, DEFEND AND HOLD HARMLESS BARCO AND BARCO’S AFFILIATES AND SUBSIDIARIES FROM AND AGAINST ANY AND ALL ACTIONS, PROCEEDINGS, 
+  LIABILITY, LOSS, DAMAGES, FEES AND COSTS (INCLUDING ATTORNEY FEES), AND OTHER EXPENSES INCURRED OR SUFFERED BY BARCO ARISING OUT OF OR IN CONNECTION WITH ANY BREACH BY 
+  YOU OF THE TERMS OF THIS SOFTWARE LICENSE. 
+
+7 This Software License is the only understanding and agreement between you and Barco for use of the Software by you and/or Authorized Users. The Software License supersedes 
+  all other communications, understandings or agreements we had prior to this Software License (with the exception of any continuing confidentiality agreement) although 
+  nothing in this Software License purports to exclude liability for fraudulent misrepresentation. You may not export or re-export the Software or any copy or adaptation 
+  in violation of any applicable laws or regulations. This Software License shall not be altered, amended or varied. If any provision of this Software License is determined 
+  to be illegal, void or unenforceable, or if any court of competent jurisdiction in any final decision so determines, this Software License shall continue in full force save 
+  that such provision shall be deemed to be deleted with effect from the date of such decision, or such earlier date, and shall be replaced by a provision which is acceptable 
+  by law and which embodies the intention of this Software License a close as possible.
+
+8 The construction, validity and performance of this Software License shall be governed in all respects by the laws of Belgium without recourse to its conflict of law 
+  principles. All disputes arising in any way out of or affecting this Software License shall be subject to the exclusive jurisdiction of the courts of Kortrijk, without 
+  prejudice to enforcement of any judgment or order thereof in any other jurisdiction. The United Nations Convention on Contracts for the International Sale of Goods 
+  (the "Convention") shall not apply to this Software License, however, if the Convention is deemed by a court of competent jurisdiction to apply to this Software License, 
+  Barco shall not be liable for any claimed non-conformance of the Software under Article 35(2) of the Convention.
+
+  Open Source Software provisions:
+  This product contains software components released under an Open Source license, as follows:
+
+  Name		Version		License type
+  ----		-------		------------	
+  EasyBMP	1.06		BSD - revised/modified
+  Boost		1.40.0		BSD Like
+  Glew				BSD Like
+  OpenCV	2.0.0		BSD - revised/modified
+  Meschach	1.2b		BSD Like
+  MTGP		2009-2011	BSD Like
+  OpenCL	1.1	
+  xml/xmlParser			BSD - revised/modified
+  zlib		in 2005		BSD Like
+
+Copyright on each Open Source Software component belongs to the respective initial copyright holder, each additional contributor and/or their respective assignee(s), as 
+may be identified in the respective Open Source Software documentation, source code, README file, or otherwise. You shall not remove or obscure or otherwise alter the 
+respective copyrights
+
+EACH SEPARATE OPEN SOURCE SOFTWARE COMPONENT AND ANY RELATED DOCUMENTATION ARE PROVIDED "AS IS" WITHOUT EXPRESS OR IMPLIED WARRANTY INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL THE COPYRIGHTHOLDER OR ANY OTHER CONTRIBUTOR BE LIABLE FOR DIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY. MORE INFORMATION/DETAILS IS TO BE 
+FOUND IN EACH SPECIFIC OPEN SOURCE LICENSE.
